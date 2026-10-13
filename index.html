@@ -21,6 +21,11 @@
   --red:#e4707e;
   --amber:#d9a441;
   --purple:#a98fd4;
+  /* 台股配色：紅＝漲＝全部達標，綠＝跌＝達成很少。
+     只用在「幾項達標」這種彙總數字上。詳情頁逐項的 ✓／× 仍是通用的
+     綠＝達標、紅＝未達標——那是兩套語意，刻意用不同色階避免看成同一件事。 */
+  --up:#f0564a;
+  --down:#1fae6a;
   --track:#232e45;      /* 進度條底 */
   --shadow:0 14px 34px rgba(0,0,0,.45);
 }
@@ -62,10 +67,13 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .table{width:100%;border-collapse:collapse;min-width:980px}
 .table th{text-align:left;white-space:nowrap;background:var(--card2);color:var(--muted);font-size:11px;font-weight:700;padding:12px 17px;border-bottom:1px solid var(--line)}
 .table td{padding:15px 17px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
-.table tbody tr{cursor:pointer;transition:background .15s}
+.table tbody tr{transition:background .15s}
+.stock-open{display:block;background:none;border:0;padding:0;text-align:left;cursor:pointer;font-weight:800;color:var(--head);font-size:14px}
+.stock-open:hover{color:var(--blue);text-decoration:underline}
+.score-cell{cursor:pointer}
+.score-cell:hover{background:#1f2a3e}
 .table tbody tr:hover{background:#1d273a}
 .table tbody tr:last-child td{border-bottom:0}
-.stock-name{font-weight:800;color:var(--head);font-size:14px}
 .stock-id{font-size:12px;color:var(--dim);margin-top:2px}
 .tags{display:flex;gap:5px;max-width:280px;flex-wrap:wrap}
 .tag{font-size:11px;background:#223150;color:#9bb6da;border-radius:7px;padding:3px 7px;white-space:nowrap}
@@ -75,13 +83,31 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .score .mini{font-size:10px;color:var(--amber)}
 .bar{width:85px;height:5px;border-radius:10px;overflow:hidden;background:var(--track);margin-top:6px}
 .bar span{height:100%;display:block;background:var(--blue)}
-.bar.green span{background:var(--green)}
+.bar.up span{background:var(--up)}
+.bar.down span{background:var(--down)}
 .bar.warning span{background:var(--amber)}
+.score .value.up{color:var(--up)}
+.score .value.down{color:var(--down)}
+.dmetric .v.up{color:var(--up)}
+.dmetric .v.down{color:var(--down)}
 .state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:5px 8px;white-space:nowrap;background:#222c42;color:#9aa9c0}
 .state.ok{background:rgba(53,192,138,.14);color:var(--green)}
 .state.alert{background:rgba(228,112,126,.14);color:var(--red)}
 .state.wait{background:rgba(217,164,65,.14);color:var(--amber)}
 .complete-value{font-weight:800}
+.pop{position:fixed;z-index:30;width:min(360px,calc(100vw - 24px));background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 18px 44px rgba(0,0,0,.6);padding:13px 15px;display:none}
+.pop.open{display:block}
+.pop-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px}
+.pop-title{font-size:13px;font-weight:800;color:var(--head)}
+.pop-score{font-size:13px;font-weight:800}
+.pop-sub{font-size:11px;color:var(--dim);margin-bottom:9px}
+.pop-group{font-size:11px;font-weight:800;margin:10px 0 4px;letter-spacing:.04em}
+.pop-group.fail{color:var(--red)}
+.pop-group.unknown{color:var(--amber)}
+.pop-item{border-top:1px solid var(--line-soft);padding:7px 0}
+.pop-item .l{font-size:12px;font-weight:700;color:var(--ink)}
+.pop-item .d{font-size:11px;color:var(--muted);margin-top:2px}
+.pop-all{font-size:12px;color:var(--green);font-weight:700;padding:4px 0}
 .empty-area{padding:64px 16px;text-align:center;color:var(--muted)}
 .empty-icon{font-size:34px;color:#44546f}
 .empty-area h3{color:var(--head);font-size:17px;margin:9px 0 4px}
@@ -164,6 +190,7 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
   </section>
   <div class="footer"><span>規則 v1.1 · 核心 8／基本面 5／技術 7／籌碼 4</span><span>本機離線計算，不會自動上傳或連線 GitHub。分數不代表未來報酬機率。</span></div>
 </main>
+<div class="pop" id="pop" role="dialog" aria-label="未達標項目"></div>
 <div class="overlay" id="overlay"></div>
 <aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true">
   <div class="drawer-header"><div><div class="eyebrow">STOCK DETAILS</div><div class="detail-title" id="detailName">—</div><div class="sub" id="detailSub"></div></div><button class="close" id="close" aria-label="關閉股票詳情">×</button></div>
@@ -351,13 +378,31 @@ function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('maj
     if(status==='missing'&&e.completeness>=80)return false;return true;
   }).sort((a,b)=>b.ev.core.pass-a.ev.core.pass||b.ev.completeness-a.ev.completeness||String(a.row['股票代號']).localeCompare(String(b.row['股票代號'])));
 }
-function scoreCell(group){const c=group.unknown===group.n?'—':group.pass;return `<div class="score"><span class="value ${c==='—'?'empty':''}">${c}/${group.n}</span>${group.unknown?`<span class="mini">待 ${group.unknown}</span>`:''}</div><div class="bar"><span style="width:${100*group.pass/group.n}%"></span></div>`;}
+// 台股習慣：紅＝漲、綠＝跌。所以「全部達標」是紅、「達成很少」是綠。
+// 門檻取 1/3 是看實際分布定的（2026-10-13、163 檔）：7 項裡只中 2 項確實算少，
+// 而 1/4 會讓技術面的綠色從 55 檔掉到 21 檔，少到看不出區別。改這一個數字就好。
+const WEAK_RATIO = 1 / 3;
+function scoreTone(group){
+  if(group.unknown===group.n)return '';                 // 全部無法判定，不上色
+  if(group.pass===group.n)return 'up';                  // 全部達標（此時 unknown 必為 0）
+  // 有未確認項目時不塗綠：那是「不知道」，不是「做不到」，塗成跌色會冤枉它
+  if(group.unknown===0&&group.pass/group.n<=WEAK_RATIO)return 'down';
+  return '';
+}
+function scoreCell(group,symbol,key,title){
+  const c=group.unknown===group.n?'—':group.pass,tone=scoreTone(group);
+  const unmet=group.details.filter(d=>d.status!=='pass').length;
+  return `<td class="score-cell" data-symbol="${esc(symbol)}" data-group="${esc(key)}" tabindex="0" role="button" aria-label="${esc(title)} ${c} / ${group.n}，${unmet?`點選查看 ${unmet} 項未達標`:'全部達標'}"><div class="score"><span class="value ${c==='—'?'empty':''} ${tone}">${c}/${group.n}</span>${group.unknown?`<span class="mini">待 ${group.unknown}</span>`:''}</div><div class="bar ${tone}"><span style="width:${100*group.pass/group.n}%"></span></div></td>`;
+}
 function stateBadge(ev){const cls=ev.status==='核心全部達標'?'ok':ev.blockers.length?'alert':ev.pendingMust.length?'wait':'';return `<span class="state ${cls}">${esc(ev.status)}</span>`;}
 function refresh(){
   const all=currentSnapshots(),evaluated=all.map(r=>evaluate(r)),list=displayed();
   $('totalStocks').textContent=all.length||'—';$('coreReady').textContent=all.length?evaluated.filter(e=>e.ready).length:'—';$('pendingMust').textContent=all.length?evaluated.filter(e=>e.blockers.length||e.pendingMust.length).length:'—';$('avgCompleteness').textContent=all.length?`${Math.round(evaluated.reduce((sum,e)=>sum+e.completeness,0)/all.length)}%`:'—';
   $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 點選股票查看詳細條件與最近五個交易日曲線`:'匯入資料後可搜尋、篩選並點選股票。';
-  $('rows').innerHTML=list.map(({row,ev})=>`<tr data-symbol="${esc(row['股票代號'])}" tabindex="0" title="點選查看個股明細"><td><div class="stock-name">${esc(row['股票名稱'])}</div><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td><td>${scoreCell(ev.core)}</td><td>${scoreCell(ev.basic)}</td><td>${scoreCell(ev.tech)}</td><td>${scoreCell(ev.chip)}</td><td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness>=90?'green':ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
+  // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  hidePop();   // tbody 整個重建，原本的錨點已經不存在了
   $('empty').style.display=list.length?'none':'block';
   $('empty').innerHTML=!all.length?'<div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p>':'<div class="empty-icon">⌕</div><h3>沒有符合條件的股票</h3><p>試著調整股票名稱、主要族群或核心狀態。</p>';
   if(openedSymbol)renderDetails(openedSymbol);
@@ -393,7 +438,7 @@ function renderRisk(row){const fields=[['融資餘額近五日變化','feature__
     return `<div class="risk-item"><div class="main">${name}</div><div class="info">${esc(status)}</div><div class="info">${pname}：${pr===null?'—':fmt(pr,2)+' 天均量'}</div></div>`;}).join('');}
 function renderDetails(symbol){const date=getSelectedDate(),row=dataMap.get(date)?.get(symbol);if(!row){closeDrawer();return;}const ev=evaluate(row);const hist=recentHistory(symbol,date);const f=ev.fund;
   $('detailName').textContent=`${row['股票名稱']}　${symbol}`;$('detailSub').textContent=`${date} · ${majors(row).join(' / ')||'未分類'} · ${ev.status}`;
-  let metricHtml=GROUPS.map(g=>{const e=ev[g.k];return `<div class="dmetric"><div class="k">${g.title}</div><div class="v">${e.unknown===e.n?'—':e.pass}/${g.n}</div><div class="m">${e.unknown?`待確認 ${e.unknown} 項`:'全部可判定'}</div></div>`;}).join('');metricHtml+=`<div class="dmetric"><div class="k">資料完整度</div><div class="v">${ev.completeness}%</div><div class="m">有效來源欄位覆蓋率</div></div>`;
+  let metricHtml=GROUPS.map(g=>{const e=ev[g.k];return `<div class="dmetric"><div class="k">${g.title}</div><div class="v ${scoreTone(e)}">${e.unknown===e.n?'—':e.pass}/${g.n}</div><div class="m">${e.unknown?`待確認 ${e.unknown} 項`:'全部可判定'}</div></div>`;}).join('');metricHtml+=`<div class="dmetric"><div class="k">資料完整度</div><div class="v">${ev.completeness}%</div><div class="m">有效來源欄位覆蓋率</div></div>`;
   const notices=[];
   if(ev.blockers.length)notices.push(`核心必要條件未達標：${ev.blockers.map(x=>x.label).join('、')}`);
   if(ev.pendingMust.length)notices.push(`核心必要條件資料不足：${ev.pendingMust.map(x=>x.label).join('、')}`);
@@ -406,9 +451,49 @@ function renderDetails(symbol){const date=getSelectedDate(),row=dataMap.get(date
 }
 function openDrawer(symbol){openedSymbol=symbol;renderDetails(symbol);$('overlay').classList.add('open');$('drawer').classList.add('open');$('drawer').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('close').focus();}
 function closeDrawer(){openedSymbol=null;$('overlay').classList.remove('open');$('drawer').classList.remove('open');$('drawer').setAttribute('aria-hidden','true');document.body.style.overflow='';}
-$('close').addEventListener('click',closeDrawer);$('overlay').addEventListener('click',closeDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
-$('rows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-symbol]');if(tr)openDrawer(tr.getAttribute('data-symbol'));});
-$('rows').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const tr=e.target.closest('tr[data-symbol]');if(tr){e.preventDefault();openDrawer(tr.getAttribute('data-symbol'));}}});
+$('close').addEventListener('click',closeDrawer);$('overlay').addEventListener('click',closeDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape'){hidePop();closeDrawer();}});
+// 點分數格跳出的小卡：只列沒過的項目，而且「未達標」與「未確認」分開列。
+// 這兩件事混在一起正是規格裡特別交代不可以做的——資料沒公布不等於做不到。
+function popContent(symbol,key){
+  const row=dataMap.get(getSelectedDate())?.get(symbol);if(!row)return '';
+  const ev=evaluate(row),g=GROUPS.find(x=>x.k===key),e=ev[key];
+  const fails=e.details.filter(d=>d.status==='fail'),unknowns=e.details.filter(d=>d.status==='unknown');
+  const block=(items,cls,title)=>items.length?`<div class="pop-group ${cls}">${title}（${items.length}）</div>`
+    +items.map(d=>`<div class="pop-item"><div class="l">${esc(d.label)}${d.must?'<span class="key">必要</span>':''}</div><div class="d">${esc(d.detail)}</div></div>`).join(''):'';
+  return `<div class="pop-head"><span class="pop-title">${esc(row['股票名稱'])}　${esc(g.title)}</span>`
+    +`<span class="pop-score ${scoreTone(e)}">${e.unknown===e.n?'—':e.pass}/${g.n}</span></div>`
+    +`<div class="pop-sub">${esc(getSelectedDate())} · 點股票名稱可開完整詳情</div>`
+    +(fails.length||unknowns.length?block(fails,'fail','未達標')+block(unknowns,'unknown','未確認')
+      :'<div class="pop-all">✓ 全部達標</div>');
+}
+function showPop(symbol,key,anchor){
+  const el=$('pop');el.innerHTML=popContent(symbol,key);el.classList.add('open');
+  // 量完真實尺寸再定位，並夾在視窗內；下方放不下就翻到上方
+  const r=anchor.getBoundingClientRect(),box=el.getBoundingClientRect();
+  const left=Math.min(Math.max(12,r.left),Math.max(12,window.innerWidth-box.width-12));
+  let top=r.bottom+8;
+  if(top+box.height>window.innerHeight-12)top=Math.max(12,r.top-box.height-8);
+  el.style.left=left+'px';el.style.top=top+'px';
+  el.dataset.symbol=symbol;el.dataset.group=key;
+}
+function hidePop(){const el=$('pop');el.classList.remove('open');delete el.dataset.symbol;delete el.dataset.group;}
+$('rows').addEventListener('click',e=>{
+  const name=e.target.closest('.stock-open');
+  if(name){hidePop();openDrawer(name.getAttribute('data-symbol'));return;}
+  const cell=e.target.closest('.score-cell');if(!cell){hidePop();return;}
+  const sym=cell.getAttribute('data-symbol'),key=cell.getAttribute('data-group'),el=$('pop');
+  if(el.classList.contains('open')&&el.dataset.symbol===sym&&el.dataset.group===key){hidePop();return;}
+  showPop(sym,key,cell);
+});
+// 分數格是 div，Enter／空白鍵要自己轉成 click；股票名稱是 button，瀏覽器已經代勞
+$('rows').addEventListener('keydown',e=>{
+  if(e.key!=='Enter'&&e.key!==' ')return;
+  const cell=e.target.closest('.score-cell');if(cell){e.preventDefault();cell.click();}
+});
+document.addEventListener('click',e=>{if(!e.target.closest('.score-cell')&&!e.target.closest('#pop'))hidePop();});
+// 捲動或改變視窗大小時小卡會跟錨點脫節，直接收起來比重算位置簡單也不會閃
+window.addEventListener('scroll',hidePop,true);
+window.addEventListener('resize',hidePop);
 ['search','major','status','date'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',refresh));
 $('fileInput').addEventListener('change',async ev=>{
   const files=[...ev.target.files];if(!files.length)return;
