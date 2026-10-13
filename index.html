@@ -67,6 +67,11 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .table-scroll{overflow:auto}
 .table{width:100%;border-collapse:collapse;min-width:860px}
 .table th{text-align:left;white-space:nowrap;background:var(--card2);color:var(--muted);font-size:11px;font-weight:700;padding:12px 17px;border-bottom:1px solid var(--line)}
+.table th.sortable{cursor:pointer;user-select:none}
+.table th.sortable:hover{color:var(--ink)}
+.table th.sorted{color:var(--blue)}
+.sort-arrow{margin-left:5px;opacity:.3}
+.table th.sorted .sort-arrow{opacity:1}
 .table td{padding:15px 17px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
 .table tbody tr{transition:background .15s}
 .stock-open{display:block;background:none;border:0;padding:0;text-align:left;cursor:pointer;font-weight:800;color:var(--head);font-size:14px}
@@ -193,7 +198,7 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
       <label class="field select date"><select id="date" aria-label="檢視資料日期"><option value="">尚無資料日期</option></select></label>
     </div>
     <div class="section-heading"><h2>個股快速總覽</h2><div class="hint" id="tableHint">匯入資料後可搜尋、篩選並點選股票。</div></div>
-    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th class="col-group">主要族群</th><th>核心</th><th>基本面</th><th>技術面</th><th>籌碼面</th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th class="col-group">主要族群</th><th class="sortable" data-sort="core" tabindex="0" role="button">核心<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="basic" tabindex="0" role="button">基本面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="tech" tabindex="0" role="button">技術面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="chip" tabindex="0" role="button">籌碼面<span class="sort-arrow">↕</span></th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div class="empty-area" id="empty"><div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p></div>
   </section>
   <div class="footer"><span>規則 v1.1 · 核心 8／基本面 5／技術 7／籌碼 4</span><span>本機離線計算，不會自動上傳或連線 GitHub。分數不代表未來報酬機率。</span></div>
@@ -376,7 +381,12 @@ function evaluate(row){
 function majors(row){return String(row.major_group||'').split('|').map(s=>s.trim()).filter(Boolean);}
 function getSelectedDate(){return $('date').value;}
 function currentSnapshots(){return Array.from(dataMap.get(getSelectedDate())?.values()||[]);}
+// 排序狀態。預設就是「核心達成率高的在上面」，跟點一下核心標題的結果一致——
+// 一開始就把箭頭標出來，畫面才對得上實際的排列方式。
+let sortKey='core',sortDir='desc';
 function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('major').value,status=$('status').value;
+  const g=GROUPS.find(x=>x.k===sortKey),sign=sortDir==='desc'?1:-1;
+  const rate=x=>x.ev[sortKey].pass/g.n;
   return currentSnapshots().map(row=>({row,ev:evaluate(row)})).filter(x=>{
     const row=x.row,e=x.ev;if(q&&!String(row['股票代號']||'').toLowerCase().includes(q)&&!String(row['股票名稱']||'').toLowerCase().includes(q))return false;
     if(major&&!majors(row).includes(major))return false;
@@ -384,7 +394,13 @@ function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('maj
     if(status==='near'&&!(e.core.pass>=6&&e.core.pass<8&&e.blockers.length===0))return false;
     if(status==='block'&&!e.blockers.length)return false;
     if(status==='missing'&&e.completeness>=80)return false;return true;
-  }).sort((a,b)=>b.ev.core.pass-a.ev.core.pass||b.ev.completeness-a.ev.completeness||String(a.row['股票代號']).localeCompare(String(b.row['股票代號'])));
+  }).sort((a,b)=>
+    sign*(rate(b)-rate(a))
+    // 同分時「未確認少的」優先，而且不跟著升降序翻轉：那比的是確定程度，不是好壞。
+    // 1/8 全部判得出來，跟 1/8 有五項還不知道，是兩種不同的 1/8。
+    ||a.ev[sortKey].unknown-b.ev[sortKey].unknown
+    ||b.ev.completeness-a.ev.completeness
+    ||String(a.row['股票代號']).localeCompare(String(b.row['股票代號'])));
 }
 // 四段熱度。四個模組的分母不同（8／5／7／4），所以用比例而不是絕對數量——
 // 「只有 2、3 個達標」在 /8 是偏低，在 /4 卻已經過半，同一句話換個分母就變調。
@@ -415,10 +431,16 @@ function stateBadge(ev){const cls=ev.status==='核心全部達標'?'ok':ev.block
 function refresh(){
   const all=currentSnapshots(),evaluated=all.map(r=>evaluate(r)),list=displayed();
   $('totalStocks').textContent=all.length||'—';$('coreReady').textContent=all.length?evaluated.filter(e=>e.ready).length:'—';$('pendingMust').textContent=all.length?evaluated.filter(e=>e.blockers.length||e.pendingMust.length).length:'—';$('avgCompleteness').textContent=all.length?`${Math.round(evaluated.reduce((sum,e)=>sum+e.completeness,0)/all.length)}%`:'—';
-  $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 點選股票查看詳細條件與最近五個交易日曲線`:'匯入資料後可搜尋、篩選並點選股票。';
+  $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 依${esc(GROUPS.find(g=>g.k===sortKey).title)}達成率${sortDir==='desc'?'由高到低':'由低到高'} · 點標題換排序、點分數看未達標、點名稱開詳情`:'匯入資料後可搜尋、篩選並點選股票。';
   // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
   // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
   $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  document.querySelectorAll('.table th.sortable').forEach(th=>{
+    const on=th.dataset.sort===sortKey;
+    th.classList.toggle('sorted',on);
+    th.querySelector('.sort-arrow').textContent=on?(sortDir==='desc'?'▼':'▲'):'↕';
+    th.setAttribute('aria-sort',on?(sortDir==='desc'?'descending':'ascending'):'none');
+  });
   hidePop();   // tbody 整個重建，原本的錨點已經不存在了
   $('empty').style.display=list.length?'none':'block';
   $('empty').innerHTML=!all.length?'<div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p>':'<div class="empty-icon">⌕</div><h3>沒有符合條件的股票</h3><p>試著調整股票名稱、主要族群或核心狀態。</p>';
@@ -512,6 +534,16 @@ document.addEventListener('click',e=>{if(!e.target.closest('.score-cell')&&!e.ta
 window.addEventListener('scroll',hidePop,true);
 window.addEventListener('resize',hidePop);
 ['search','major','status','date'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',refresh));
+// 點分數欄的標題排序：同一欄再點一次換升降序，換一欄就回到由高到低
+document.querySelectorAll('.table th.sortable').forEach(th=>{
+  th.addEventListener('click',()=>{
+    const k=th.dataset.sort;
+    if(sortKey===k)sortDir=sortDir==='desc'?'asc':'desc';
+    else{sortKey=k;sortDir='desc';}
+    refresh();
+  });
+  th.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();th.click();}});
+});
 $('fileInput').addEventListener('change',async ev=>{
   const files=[...ev.target.files];if(!files.length)return;
   if(isDemo)clearData();let total=0,fund=0,fail=[];
