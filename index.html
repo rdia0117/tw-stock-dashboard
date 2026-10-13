@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>股票觀察系統｜台股儀表板</title>
+<style>
+:root{
+  color-scheme:dark;
+  --paper:#0d1320;      /* 頁面底 */
+  --card:#161e2d;       /* 卡片／表格底 */
+  --card2:#1b2435;      /* 卡片內再一層（表頭、風險格） */
+  --line:#27324a;       /* 分隔線 */
+  --line-soft:#1f2940;  /* 表格列的淡分隔線 */
+  --ink:#d6dEEb;        /* 主要文字 */
+  --head:#eef3fb;       /* 標題文字 */
+  --muted:#8c9bb2;      /* 次要文字 */
+  --dim:#6b7a92;        /* 更淡的註記 */
+  --blue:#5b91f0;
+  --green:#35c08a;
+  --red:#e4707e;
+  --amber:#d9a441;
+  --purple:#a98fd4;
+  --track:#232e45;      /* 進度條底 */
+  --shadow:0 14px 34px rgba(0,0,0,.45);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--paper);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Noto Sans TC","Microsoft JhengHei",Segoe UI,sans-serif;font-size:14px;line-height:1.5}
+button,input,select{font:inherit}button{cursor:pointer}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button:disabled{cursor:not-allowed;opacity:.4}
+main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
+.top{display:flex;justify-content:space-between;align-items:flex-start;gap:24px;margin-bottom:26px}
+.eyebrow{font-size:11px;letter-spacing:.17em;font-weight:800;color:#7d94b5;text-transform:uppercase}
+.headline{font-size:28px;letter-spacing:-.055em;line-height:1.3;color:var(--head);margin:6px 0}
+.sub{color:var(--muted);font-size:13px}
+.top-actions{display:flex;gap:9px;flex-wrap:wrap;justify-content:flex-end}
+.button{display:inline-flex;gap:9px;align-items:center;justify-content:center;padding:10px 15px;background:var(--blue);color:#0b1120;border:1px solid var(--blue);border-radius:11px;font-weight:700;white-space:nowrap}
+.button.secondary{background:var(--card);border-color:var(--line);color:var(--ink)}
+.button:hover{filter:brightness(1.1)}
+.upload-status{margin:0 0 18px;padding:11px 14px;background:#14243f;border:1px solid #27406b;border-radius:12px;color:#9fc0f0;font-size:12px;display:none}
+.upload-status.visible{display:block}
+.metrics{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:23px}
+.metric{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 20px;box-shadow:var(--shadow)}
+.metric-label{font-size:12px;color:var(--muted);font-weight:600}
+.metric-value{font-size:29px;font-weight:800;line-height:1.35;color:var(--head);letter-spacing:-.035em;margin-top:7px}
+.metric-hint{color:var(--dim);font-size:11px;margin-top:7px}
+.section-card{border:1px solid var(--line);border-radius:17px;background:var(--card);box-shadow:var(--shadow);overflow:hidden}
+.toolbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;padding:16px 18px;border-bottom:1px solid var(--line)}
+.field{position:relative;display:flex;align-items:center}
+.field input,.field select{width:100%;background:var(--card2);border:1px solid var(--line);min-height:40px;border-radius:10px;padding:9px 13px;color:var(--ink)}
+.field input::placeholder{color:var(--dim)}
+.search{min-width:230px;max-width:330px;flex:1 1 230px}
+.search input{padding-left:34px}
+.search-icon{position:absolute;left:12px;pointer-events:none;color:var(--dim)}
+.select{min-width:160px}.select.date{min-width:155px}
+.toolbar-spacer{flex:1}
+.section-heading{padding:17px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.section-heading h2{font-size:16px;color:var(--head);margin:0}
+.hint{font-size:12px;color:var(--muted)}
+.table-scroll{overflow:auto}
+.table{width:100%;border-collapse:collapse;min-width:980px}
+.table th{text-align:left;white-space:nowrap;background:var(--card2);color:var(--muted);font-size:11px;font-weight:700;padding:12px 17px;border-bottom:1px solid var(--line)}
+.table td{padding:15px 17px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
+.table tbody tr{cursor:pointer;transition:background .15s}
+.table tbody tr:hover{background:#1d273a}
+.table tbody tr:last-child td{border-bottom:0}
+.stock-name{font-weight:800;color:var(--head);font-size:14px}
+.stock-id{font-size:12px;color:var(--dim);margin-top:2px}
+.tags{display:flex;gap:5px;max-width:280px;flex-wrap:wrap}
+.tag{font-size:11px;background:#223150;color:#9bb6da;border-radius:7px;padding:3px 7px;white-space:nowrap}
+.score{display:flex;gap:5px;align-items:baseline;white-space:nowrap}
+.score .value{font-size:16px;font-weight:800;color:var(--head)}
+.score .value.empty{color:var(--dim)}
+.score .mini{font-size:10px;color:var(--amber)}
+.bar{width:85px;height:5px;border-radius:10px;overflow:hidden;background:var(--track);margin-top:6px}
+.bar span{height:100%;display:block;background:var(--blue)}
+.bar.green span{background:var(--green)}
+.bar.warning span{background:var(--amber)}
+.state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:5px 8px;white-space:nowrap;background:#222c42;color:#9aa9c0}
+.state.ok{background:rgba(53,192,138,.14);color:var(--green)}
+.state.alert{background:rgba(228,112,126,.14);color:var(--red)}
+.state.wait{background:rgba(217,164,65,.14);color:var(--amber)}
+.complete-value{font-weight:800}
+.empty-area{padding:64px 16px;text-align:center;color:var(--muted)}
+.empty-icon{font-size:34px;color:#44546f}
+.empty-area h3{color:var(--head);font-size:17px;margin:9px 0 4px}
+.empty-area code{background:var(--card2);border:1px solid var(--line);border-radius:5px;padding:1px 5px}
+.footer{margin-top:18px;color:var(--dim);font-size:11px;display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;z-index:10}
+.overlay.open{display:block}
+.drawer{position:fixed;right:0;top:0;bottom:0;width:min(810px,100%);background:var(--paper);box-shadow:-20px 0 60px rgba(0,0,0,.6);z-index:20;overflow:auto;transform:translateX(105%);transition:transform .2s ease}
+.drawer.open{transform:translateX(0)}
+.drawer-header{position:sticky;top:0;background:rgba(13,19,32,.94);backdrop-filter:blur(12px);border-bottom:1px solid var(--line);padding:19px 25px;z-index:4;display:flex;justify-content:space-between;align-items:center}
+.detail-title{font-size:23px;font-weight:850;color:var(--head);letter-spacing:-.03em}
+.close{border:1px solid var(--line);background:var(--card);width:35px;height:35px;border-radius:9px;font-size:20px;color:var(--muted)}
+.drawer-content{padding:20px 25px 50px}
+.dmetrics{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:9px}
+.dmetric{background:var(--card);border:1px solid var(--line);border-radius:13px;padding:12px}
+.dmetric .k{color:var(--muted);font-size:11px;font-weight:700}
+.dmetric .v{color:var(--head);font-size:20px;font-weight:800;margin-top:4px}
+.dmetric .m{font-size:10px;color:var(--dim);margin-top:2px}
+.section{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:20px;margin-top:15px}
+.section-title{margin:0;font-size:15px;font-weight:800;color:var(--head)}
+.chart-wrap{min-height:260px;margin-top:16px}
+.chart-wrap svg{width:100%;height:auto;overflow:visible}
+.legend{display:flex;align-items:center;justify-content:center;gap:22px;flex-wrap:wrap;font-size:11px;color:var(--muted);margin-top:5px}
+.dot{width:10px;height:10px;display:inline-block;border-radius:50%;margin-right:6px;vertical-align:middle}
+.section details{border-top:1px solid var(--line);margin-top:14px}
+.section details:first-of-type{margin-top:10px}
+.section summary{padding:15px 0;cursor:pointer;display:flex;justify-content:space-between;align-items:center;gap:8px;list-style:none}
+.section summary::-webkit-details-marker{display:none}
+.section summary::after{content:'⌄';color:var(--muted);font-size:17px;transition:transform .15s}
+.section details[open] summary::after{transform:rotate(180deg)}
+.rule-row{display:flex;justify-content:space-between;gap:10px;align-items:flex-start;border-top:1px solid var(--line-soft);padding:13px 1px}
+.rule-label{font-size:13px;font-weight:700;color:var(--head)}
+.rule-desc{font-size:11px;color:var(--dim);margin-top:3px}
+.rule-value{font-size:12px;color:#9ab2cc;margin-top:4px}
+.rule-status{font-size:11px;font-weight:800;white-space:nowrap}
+.rule-status.pass{color:var(--green)}
+.rule-status.fail{color:var(--red)}
+.rule-status.unknown{color:var(--amber)}
+.notice{border-radius:11px;padding:12px 13px;font-size:12px;line-height:1.6;background:rgba(217,164,65,.09);color:#e0bd77;border:1px solid rgba(217,164,65,.28);margin-top:14px}
+.risk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:13px}
+.risk-item{background:var(--card2);border:1px solid var(--line);border-radius:10px;padding:11px}
+.risk-item .main{font-size:12px;font-weight:700;color:var(--head)}
+.risk-item .info{color:var(--muted);font-size:11px;margin-top:5px}
+.key{display:inline-flex;color:#f0929d;background:rgba(228,112,126,.14);padding:2px 5px;border-radius:5px;font-size:10px;font-weight:700;margin-left:5px}
+.demo-ribbon{display:none;border:1px solid rgba(217,164,65,.3);background:rgba(217,164,65,.08);color:#e0bd77;border-radius:11px;padding:10px 14px;margin:0 0 16px;font-size:12px}
+.demo-ribbon.show{display:block}
+@media(max-width:1000px){main{padding:22px 17px}.metrics{grid-template-columns:repeat(2,minmax(0,1fr))}.toolbar-spacer{display:none}}
+@media(max-width:650px){.top{display:block}.top-actions{margin-top:15px;justify-content:flex-start}.metrics{gap:9px}.metric{padding:13px}.metric-value{font-size:24px}.toolbar{padding:12px}.search{max-width:none;flex:1 1 100%}.select{flex:1 1 calc(50% - 6px);min-width:0}.drawer-header{padding:16px}.drawer-content{padding:13px 13px 36px}.dmetrics{grid-template-columns:repeat(3,minmax(0,1fr))}.dmetric{padding:9px}.dmetric .v{font-size:17px}.section{padding:15px}.risk-grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<main>
+  <header class="top">
+    <div><div class="eyebrow">TAIWAN STOCK · OBSERVATION</div><h1 class="headline">股票觀察系統</h1><div class="sub">自動載入最近 5 個交易日的 <code>analysis_data</code> 與最新 <code>fundamental</code>，也可手動匯入其他日期。</div></div>
+    <div class="top-actions">
+      <button class="button secondary" id="demoBtn" type="button">查看示範介面</button>
+      <label class="button" for="fileInput">＋ 匯入 CSV</label>
+      <input id="fileInput" type="file" accept=".csv,text/csv" multiple hidden>
+    </div>
+  </header>
+  <div class="demo-ribbon" id="demoRibbon">目前顯示<strong>虛構示範資料</strong>，僅用來體驗搜尋、篩選與歷史曲線。匯入真實 CSV 後將移除示範數據。</div>
+  <div class="upload-status" id="message" role="status"></div>
+  <section class="metrics">
+    <div class="metric"><div class="metric-label">檢視股票數</div><div class="metric-value" id="totalStocks">—</div><div class="metric-hint">本次選擇的資料日期</div></div>
+    <div class="metric"><div class="metric-label">核心完整達標</div><div class="metric-value" id="coreReady">—</div><div class="metric-hint">8 項全數達標且無必要條件阻擋</div></div>
+    <div class="metric"><div class="metric-label">必要條件待確認</div><div class="metric-value" id="pendingMust">—</div><div class="metric-hint">核心前三項有缺漏或不符合</div></div>
+    <div class="metric"><div class="metric-label">平均資料完整度</div><div class="metric-value" id="avgCompleteness">—</div><div class="metric-hint">技術籌碼欄位 ＋ 基本面五項的覆蓋率</div></div>
+  </section>
+  <section class="section-card">
+    <div class="toolbar">
+      <label class="field search"><span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋股票名稱或代號" aria-label="搜尋股票名稱或代號"></label>
+      <label class="field select"><select id="major" aria-label="篩選主要族群"><option value="">所有主要族群</option></select></label>
+      <label class="field select"><select id="status" aria-label="篩選狀態"><option value="all">所有條件狀態</option><option value="ready">核心 8 項全達標</option><option value="near">核心只差 1～2 項</option><option value="block">必要條件不符合</option><option value="missing">資料完整度不足 80%</option></select></label>
+      <span class="toolbar-spacer"></span>
+      <label class="field select date"><select id="date" aria-label="檢視資料日期"><option value="">尚無資料日期</option></select></label>
+    </div>
+    <div class="section-heading"><h2>個股快速總覽</h2><div class="hint" id="tableHint">匯入資料後可搜尋、篩選並點選股票。</div></div>
+    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th>主要族群</th><th>核心</th><th>基本面</th><th>技術面</th><th>籌碼面</th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="empty-area" id="empty"><div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p></div>
+  </section>
+  <div class="footer"><span>規則 v1.1 · 核心 8／基本面 5／技術 7／籌碼 4</span><span>本機離線計算，不會自動上傳或連線 GitHub。分數不代表未來報酬機率。</span></div>
+</main>
+<div class="overlay" id="overlay"></div>
+<aside class="drawer" id="drawer" role="dialog" aria-modal="true" aria-labelledby="detailName" aria-hidden="true">
+  <div class="drawer-header"><div><div class="eyebrow">STOCK DETAILS</div><div class="detail-title" id="detailName">—</div><div class="sub" id="detailSub"></div></div><button class="close" id="close" aria-label="關閉股票詳情">×</button></div>
+  <div class="drawer-content" id="detailBody"></div>
+</aside>
+<script>
+'use strict';
+// v1.1：基本面 B1–B5 改讀 fundamental_YYYYMM.csv 的真實欄名。
+// 原規格假設的「公告日期 / 最新月營收年增率 / 本季EPS / 去年同季EPS …」在實際檔案裡不存在。
+const RULES = [
+{"group":"core","id":"C1","label":"中期均線趨勢","criteria":"20 日均線 > 60 日均線，且 20 日均線近 10 日斜率 > 0","fields":["indicator__MA20","indicator__MA60","indicator__ma20_slope_10d"],"why":"長短期趨勢必須同向","must":true},
+{"group":"core","id":"C2","label":"股價站穩月線","criteria":"收盤價 ≥ 20 日均線","fields":["indicator__close","indicator__MA20"],"why":"股價需維持在月線之上","must":true},
+{"group":"core","id":"C3","label":"低點結構健康","criteria":"近期低點為「墊高」或「守住」，且未跌破重要低點","fields":["feature__higher_low_label","feature__not_breach_20d_low"],"why":"低點結構若下移則列為必要條件阻擋","must":true},
+{"group":"core","id":"C4","label":"法人資金進場","criteria":"外資或投信最近 5 日買超占成交量比率 > 0","fields":["feature__foreign_ratio_5d","feature__trust_ratio_5d"],"why":"至少一方出現淨買盤","must":false},
+{"group":"core","id":"C5","label":"大戶持股增加","criteria":"400 張以上大戶近 2 週持股比例變化 > 0 百分點","fields":["feature__holder_over_400_lots_pct_change_2w_pp"],"why":"大戶週資料；不是每天重新發布","must":false},
+{"group":"core","id":"C6","label":"回檔量縮","criteria":"下跌日平均量 ÷ 上漲日平均量 < 1","fields":["feature__retrace_volume_ratio"],"why":"若沒有下跌日，此欄空白不可視為達標","must":false},
+{"group":"core","id":"C7","label":"強於大盤","criteria":"近 20 日個股報酬 − 大盤同期報酬 > 0","fields":["indicator__excess20"],"why":"相對強勢，並非保證後續續漲","must":false},
+{"group":"core","id":"C8","label":"未出現高檔滯漲","criteria":"放量滯漲旗標 = False","fields":["feature__stagnation_flag"],"why":"單一旗標不是出貨證據","must":false},
+{"group":"basic","id":"B1","label":"最新月營收年增","criteria":"最新月營收 YoY > 0","fields":["rev__yoy_pct"],"why":"月營收滯後約 10 天，是最即時的基本面訊號","must":false},
+{"group":"basic","id":"B2","label":"近三個月營收連續成長","criteria":"最近三個月 YoY 皆 > 0","fields":["rev__yoy_m0","rev__yoy_m1","rev__yoy_m2"],"why":"檔案裡沒有「三月合計 YoY」，改以三個單月 YoY 同時為正判定；平均 YoY 不等於合計 YoY，不採用","must":false},
+{"group":"basic","id":"B3","label":"單季 EPS 成長","criteria":"單季 EPS > 0，且較去年同季成長（含虧轉盈）","fields":["fin__eps_q","fin__eps_q_prev_year","fin__eps_q_yoy_pct"],"why":"直接比兩期單季 EPS 的絕對值，不靠年增率——去年同季 ≤ 0 時年增率是空的，但虧轉盈本來就該算改善","must":false},
+{"group":"basic","id":"B4","label":"單季營業利益成長","criteria":"單季營業利益 > 去年同季單季營業利益","fields":["fin__op_income_q","fin__op_income_q_prev_year","fin__op_income_q_yoy_pct"],"why":"同 B3；虧損縮小也算改善","must":false},
+{"group":"basic","id":"B5","label":"毛利率持平或改善","criteria":"毛利率較去年同季變化 ≥ 0 百分點","fields":["fin__gross_margin_delta_pp"],"why":"單位是百分點，不是比率","must":false},
+{"group":"tech","id":"T1","label":"短期均線偏多","criteria":"5 日均線 > 10 日均線","fields":["indicator__MA5","indicator__MA10"],"why":"","must":false},
+{"group":"tech","id":"T2","label":"季線持續上升","criteria":"60 日均線近 20 日斜率 > 0","fields":["indicator__ma60_slope_20d"],"why":"","must":false},
+{"group":"tech","id":"T3","label":"月線動能改善","criteria":"20 日均線近 5 日斜率 > 前 5 日斜率","fields":["indicator__ma20_slope_recent_5d","indicator__ma20_slope_prev_5d"],"why":"","must":false},
+{"group":"tech","id":"T4","label":"RSI 動能回升","criteria":"14 日 RSI 相對 5 日前變化 > 0","fields":["indicator__RSI14_5D_Delta"],"why":"","must":false},
+{"group":"tech","id":"T5","label":"KD 多頭狀態","criteria":"K 值 > D 值","fields":["indicator__K9","indicator__D9"],"why":"不是當日「黃金交叉事件」","must":false},
+{"group":"tech","id":"T6","label":"MACD 動能改善","criteria":"MACD 柱狀體近 3 日斜率 > 0","fields":["indicator__MACD_HIST_3D_SLOPE"],"why":"","must":false},
+{"group":"tech","id":"T7","label":"未明顯噴出過熱","criteria":"噴出條件符合數 ≤ 1（範圍 0–3）","fields":["feature__blowoff_conditions_met"],"why":"不是賣出訊號；門檻可再回測","must":false},
+{"group":"chip","id":"P1","label":"外資中期買盤","criteria":"外資最近 10 日淨買超比率 > 0","fields":["feature__foreign_ratio_10d"],"why":"","must":false},
+{"group":"chip","id":"P2","label":"投信中期買盤","criteria":"投信最近 10 日淨買超比率 > 0","fields":["feature__trust_ratio_10d"],"why":"","must":false},
+{"group":"chip","id":"P3","label":"400 張大戶持續增加","criteria":"400 張以上大戶近 4 週持股比例變化 > 0 百分點","fields":["feature__holder_over_400_lots_pct_change_4w_pp"],"why":"必須至少 5 週有效歷史","must":false},
+{"group":"chip","id":"P4","label":"1000 張大戶增加","criteria":"1000 張以上大戶近 2 週持股比例變化 > 0 百分點","fields":["feature__holder_over_1000_lots_pct_change_2w_pp"],"why":"與 400 張級距有包含關係","must":false}];
+const dataMap = new Map();        // 分析日 -> Map(股票代號 -> 原始列)
+const fundamentalMap = new Map(); // 股票代號 -> 依可取得日排序的基本面快照
+let isDemo = false, openedSymbol = null;
+const $ = id => document.getElementById(id);
+const GROUPS = [{k:'core',title:'核心',n:8,color:'#5b91f0'},{k:'basic',title:'基本面',n:5,color:'#a98fd4'},{k:'tech',title:'技術面',n:7,color:'#2fc0ab'},{k:'chip',title:'籌碼面',n:4,color:'#e0a94a'}];
+const RAW_FIELDS = [...new Set(RULES.filter(r=>r.group!=='basic').flatMap(r=>r.fields))];
+const esc = v => String(v??'').replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const n = v => {if(v===null||v===undefined||String(v).trim()==='')return null;const num=Number(String(v).replace(/,/g,'').trim());return Number.isFinite(num)?num:null};
+const b = v => {if(v===null||v===undefined||String(v).trim()==='')return null;const q=String(v).trim().toLowerCase();if(['true','1','yes','是'].includes(q))return true;if(['false','0','no','否'].includes(q))return false;return null};
+const normDate = input => {const v=String(input??'').trim(); if(/^\d{8}$/.test(v))return v.slice(0,4)+'-'+v.slice(4,6)+'-'+v.slice(6); if(/^\d{4}[/-]\d{1,2}[/-]\d{1,2}$/.test(v)){const s=v.split(/[/-]/);return [s[0],s[1].padStart(2,'0'),s[2].padStart(2,'0')].join('-');}return '';};
+const normMonth = input => {const v=String(input??'').trim(); if(/^\d{6}$/.test(v))return v.slice(0,4)+'-'+v.slice(4); if(/^\d{4}[/-]\d{1,2}$/.test(v)){const s=v.split(/[/-]/);return s[0]+'-'+s[1].padStart(2,'0');} return '';};
+const niceDate = d => d ? d.slice(5).replace('-','/') : '—';
+const fmt = (v,d=2) => v===null?'—':Number(v).toLocaleString('zh-TW',{minimumFractionDigits:d,maximumFractionDigits:d});
+const pct = v => v===null?'—':`${v>0?'+':''}${fmt(v*100,2)}%`;          // 小數比率欄位
+const pctRaw = v => v===null?'—':`${v>0?'+':''}${fmt(v,2)}%`;           // 來源已是百分比數值
+const pp = v => v===null?'—':`${v>0?'+':''}${fmt(v,2)} 百分點`;
+const boolText = v => v===null?'資料不足':v?'是':'否';
+function csvParse(source){
+  const text=source.replace(/^﻿/,'');const out=[];let row=[],str='',q=false;
+  for(let i=0;i<text.length;i++){
+    const ch=text[i];if(q){if(ch==='"'&&text[i+1]==='"'){str+='"';i++;}else if(ch==='"')q=false;else str+=ch;}
+    else if(ch==='"'){q=true;}else if(ch===','){row.push(str);str='';}
+    else if(ch==='\r'||ch==='\n'){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(str);if(row.some(v=>v!==''))out.push(row);row=[];str='';}
+    else str+=ch;
+  }
+  if(q)throw new Error('CSV 引號未正確結束');
+  row.push(str);if(row.some(v=>v!==''))out.push(row);
+  if(!out.length)return [];
+  const head=out.shift().map(v=>v.trim().replace(/^﻿/,''));
+  if(new Set(head).size!==head.length)throw new Error('CSV 有重複欄名');
+  return out.map(c=>Object.fromEntries(head.map((h,i)=>[h,(c[i]??'').trim()])));
+}
+const notify = (txt,warning=false) => {const el=$('message');el.textContent=txt;el.classList.add('visible');
+  el.style.background=warning?'rgba(217,164,65,.09)':'#14243f';el.style.borderColor=warning?'rgba(217,164,65,.3)':'#27406b';el.style.color=warning?'#e0bd77':'#9fc0f0';};
+function clearData(){dataMap.clear();fundamentalMap.clear();openedSymbol=null;closeDrawer();isDemo=false;$('demoRibbon').classList.remove('show');}
+function addAnalysis(rows,file){
+  if(!rows.length)return 0;
+  if(!('股票代號' in rows[0])||!('股票名稱' in rows[0])||!('indicator__MA20' in rows[0]))throw new Error(`${file}：不是預期的 analysis_data 欄位格式`);
+  const m=file.match(/analysis_data_(\d{8})/i);const fallback=m?normDate(m[1]):'';let count=0;
+  for(const raw of rows){const symbol=String(raw['股票代號']||'').trim();const date=normDate(raw['分析日期']||fallback);if(!symbol||!date)continue;
+    if(!dataMap.has(date))dataMap.set(date,new Map());dataMap.get(date).set(symbol,{...raw,'分析日期':date});count++;}
+  return count;
+}
+// 月營收 10 日前公告、CSV 11 日產出，所以 2026-09 這份要到 2026-10-11 才拿得到。
+// 用「快照年月 ≤ 分析日期」直接比會有前視偏誤：10/01 的盤看不到 9 月營收。
+function availableFrom(month){
+  const m=normMonth(month);if(!m)return '';
+  let [y,mm]=m.split('-').map(Number);mm+=1;if(mm>12){mm=1;y+=1;}
+  return `${y}-${String(mm).padStart(2,'0')}-11`;
+}
+function addFundamental(rows,file){
+  if(!rows.length)return 0;
+  if(!('股票代號' in rows[0])||!('rev__yoy_pct' in rows[0]))throw new Error(`${file}：不是預期的 fundamental 欄位格式（需要「股票代號」與「rev__yoy_pct」）`);
+  const m=file.match(/fundamental_(\d{6})/i);const fallback=m?normMonth(m[1]):'';let count=0;
+  for(const r of rows){
+    const symbol=String(r['股票代號']||'').trim();
+    const month=normMonth(r['快照年月']||r['rev__month']||fallback);
+    if(!symbol||!month)continue;
+    const rec={...r,'快照年月':month,'可取得日':availableFrom(month)};
+    const arr=fundamentalMap.get(symbol)||[];
+    const pos=arr.findIndex(x=>x['快照年月']===month);
+    if(pos>=0)arr[pos]=rec;else arr.push(rec);
+    arr.sort((a,b)=>a['快照年月'].localeCompare(b['快照年月']));
+    fundamentalMap.set(symbol,arr);count++;
+  }
+  return count;
+}
+function lastFund(symbol,date){const arr=fundamentalMap.get(symbol)||[];return [...arr].reverse().find(x=>x['可取得日']&&x['可取得日']<=date)||null;}
+// 逐欄位的有效性檢查。週資料的基準日本來就會跟分析日不同，不能當成失效。
+function usable(row,key,date){
+  if(!row)return false;const val=row[key];if(val===null||val===undefined||String(val).trim()==='')return false;
+  if(key.startsWith('indicator__')||key.startsWith('price__')||key.startsWith('feature__higher_')||key==='feature__not_breach_20d_low'||key==='feature__retrace_volume_ratio'||key==='feature__stagnation_flag'||key==='feature__blowoff_conditions_met'){
+    if(b(row['has_price'])===false||b(row['price__is_valid_ohlc'])===false)return false;
+    const priceDate=normDate(row['price__date']);if(priceDate&&priceDate!==date)return false;
+  }
+  const longFields=['indicator__MA60','indicator__ma60_slope_20d','feature__blowoff_conditions_met'];
+  if(longFields.includes(key)){const days=n(row['valid_price_days']);if(days!==null&&days<60)return false;}
+  if(/^(feature__foreign_ratio_|feature__trust_ratio_)/.test(key)&&b(row['has_institution'])===false)return false;
+  if(key.startsWith('feature__holder_over_')&&b(row['has_holders'])===false)return false;
+  if(key.includes('_change_4w_pp')){const weeks=n(row['feature__holders_history_weeks_available']);if(weeks===null||weeks<5)return false;}
+  return true;
+}
+function metric(row,key,date){return usable(row,key,date)?n(row[key]):null;}
+function boolMetric(row,key,date){return usable(row,key,date)?b(row[key]):null;}
+function evalRule(r,row,f,date){
+  const [a,c,d]=r.fields;
+  const get=key=>r.group==='basic'?n(f?.[key]):metric(row,key,date);
+  const v=get(a),w=c?get(c):null,z=d?get(d):null;
+  const unknown = {status:'unknown',detail:'資料不足／尚未公布'};
+  const make=(ok,detail)=>({status:ok?'pass':'fail',detail});
+  switch(r.id){
+    case 'C1':return [v,w,z].some(x=>x===null)?unknown:make(v>w&&z>0,`20 日均線 ${fmt(v)}；60 日均線 ${fmt(w)}；月線斜率 ${pct(z)}`);
+    case 'C2':return [v,w].some(x=>x===null)?unknown:make(v>=w,`收盤 ${fmt(v)}；20 日均線 ${fmt(w)}`);
+    case 'C3':{if(!usable(row,a,date)||!usable(row,c,date))return unknown;const label=row[a],okay=boolMetric(row,c,date);return okay===null?unknown:make(['墊高','守住'].includes(label)&&okay,`低點結構：${label}；未破重要低點：${boolText(okay)}`);}
+    case 'C4':{if(v!==null&&v>0||w!==null&&w>0)return make(true,`外資 ${pct(v)}；投信 ${pct(w)}`);if(v===null||w===null)return unknown;return make(false,`外資 ${pct(v)}；投信 ${pct(w)}`);}
+    case 'C5':case 'P3':case 'P4':return v===null?unknown:make(v>0,`持股比例變化 ${pp(v)}`);
+    case 'C6':return v===null?unknown:make(v<1,`下跌日／上漲日平均量 = ${fmt(v)}`);
+    case 'C7':return v===null?unknown:make(v>0,`相對大盤超額報酬 ${pct(v)}`);
+    case 'C8':{const vv=boolMetric(row,a,date);return vv===null?unknown:make(!vv,`高檔滯漲旗標：${boolText(vv)}`);}
+    // ── 基本面：來源是 fundamental_YYYYMM.csv，百分比欄位已是百分比數值，不再乘 100 ──
+    case 'B1':return v===null?unknown:make(v>0,`${esc(f?.['rev__month']||f?.['快照年月']||'')} 月營收 YoY ${pctRaw(v)}`);
+    case 'B2':{const trend=f?.['rev__yoy_trend']||'';const shown=`近三月 YoY ${pctRaw(v)} / ${pctRaw(w)} / ${pctRaw(z)}${trend?`（${trend}）`:''}`;
+      return [v,w,z].some(x=>x===null)?unknown:make(v>0&&w>0&&z>0,shown);}
+    // v/w = 本季與去年同季的單季絕對值，z = 年增率（基期 <= 0 時為空，只拿來顯示）
+    case 'B3':{const q=f?.['fin__quarter']||'';
+      if(v===null)return unknown;
+      if(v<=0)return make(false,`${q} 單季 EPS ${fmt(v)} 元；去年同季 ${w===null?'無資料':fmt(w)+' 元'}`);
+      if(w===null)return {status:'unknown',detail:`${q} 單季 EPS ${fmt(v)} 元；缺去年同季資料，無法比較`};
+      const turn3=w<=0?'（虧轉盈）':'';
+      return make(v>w,`${q} 單季 EPS ${fmt(v)} 元；去年同季 ${fmt(w)} 元${turn3}${z===null?'':`，年增 ${pctRaw(z)}`}`);}
+    case 'B4':{const q=f?.['fin__quarter']||'';
+      if(v===null||w===null)return {status:'unknown',detail:`${q} 缺本季或去年同季的單季營業利益，無法比較`};
+      const turn4=w<=0&&v>0?'（虧轉盈）':w<=0&&v>w?'（虧損縮小）':'';
+      return make(v>w,`${q} 單季營業利益 ${fmt(v,0)} 千元；去年同季 ${fmt(w,0)} 千元${turn4}${z===null?'':`，年增 ${pctRaw(z)}`}`);}
+    case 'B5':{const q=f?.['fin__quarter']||'';
+      return v===null?unknown:make(v>=0,`${q} 毛利率較去年同季 ${pp(v)}（本季毛利率 ${fmt(n(f?.['fin__gross_margin_pct']))}%）`);}
+    case 'T1':return [v,w].some(x=>x===null)?unknown:make(v>w,`5 日均線 ${fmt(v)}；10 日均線 ${fmt(w)}`);
+    case 'T2':return v===null?unknown:make(v>0,`季線斜率 ${pct(v)}`);
+    case 'T3':return [v,w].some(x=>x===null)?unknown:make(v>w,`近 5 日 ${pct(v)}；前 5 日 ${pct(w)}`);
+    case 'T4':return v===null?unknown:make(v>0,`RSI 五日變化 ${v>0?'+':''}${fmt(v)}`);
+    case 'T5':return [v,w].some(x=>x===null)?unknown:make(v>w,`K 值 ${fmt(v)}；D 值 ${fmt(w)}`);
+    case 'T6':return v===null?unknown:make(v>0,`MACD 柱狀體斜率 ${fmt(v,4)}`);
+    case 'T7':return v===null?unknown:make(v<=1,`符合噴出條件 ${v}/3`);
+    case 'P1':case 'P2':return v===null?unknown:make(v>0,`最近 10 日買超比率 ${pct(v)}`);
+  }
+  return unknown;
+}
+function evaluate(row){
+  const date=row['分析日期'],symbol=row['股票代號'],f=lastFund(symbol,date);
+  const evaluations={};for(const group of GROUPS){const details=RULES.filter(r=>r.group===group.k).map(r=>({...r,...evalRule(r,row,f,date)}));const pass=details.filter(d=>d.status==='pass').length,unknown=details.filter(d=>d.status==='unknown').length;evaluations[group.k]={pass,unknown,n:group.n,details};}
+  // 完整度 = 不重複的技術籌碼原始欄位覆蓋率，加上五項基本面是否可判定。
+  let ok=RAW_FIELDS.filter(field=>usable(row,field,date)).length;
+  ok+=evaluations.basic.details.filter(x=>x.status!=='unknown').length;
+  const completeness=Math.round(100*ok/(RAW_FIELDS.length+5));
+  const blockers=evaluations.core.details.filter(x=>x.must&&x.status==='fail');
+  const pendingMust=evaluations.core.details.filter(x=>x.must&&x.status==='unknown');
+  const ready=evaluations.core.pass===8&&blockers.length===0&&pendingMust.length===0;
+  const status=blockers.length?'必要條件不符':pendingMust.length?'必要條件待確認':ready?'核心全部達標':evaluations.core.pass>=6?'接近核心達標':'繼續觀察';
+  return {...evaluations,completeness,blockers,pendingMust,ready,status,fund:f};
+}
+function majors(row){return String(row.major_group||'').split('|').map(s=>s.trim()).filter(Boolean);}
+function getSelectedDate(){return $('date').value;}
+function currentSnapshots(){return Array.from(dataMap.get(getSelectedDate())?.values()||[]);}
+function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('major').value,status=$('status').value;
+  return currentSnapshots().map(row=>({row,ev:evaluate(row)})).filter(x=>{
+    const row=x.row,e=x.ev;if(q&&!String(row['股票代號']||'').toLowerCase().includes(q)&&!String(row['股票名稱']||'').toLowerCase().includes(q))return false;
+    if(major&&!majors(row).includes(major))return false;
+    if(status==='ready'&&!e.ready)return false;
+    if(status==='near'&&!(e.core.pass>=6&&e.core.pass<8&&e.blockers.length===0))return false;
+    if(status==='block'&&!e.blockers.length)return false;
+    if(status==='missing'&&e.completeness>=80)return false;return true;
+  }).sort((a,b)=>b.ev.core.pass-a.ev.core.pass||b.ev.completeness-a.ev.completeness||String(a.row['股票代號']).localeCompare(String(b.row['股票代號'])));
+}
+function scoreCell(group){const c=group.unknown===group.n?'—':group.pass;return `<div class="score"><span class="value ${c==='—'?'empty':''}">${c}/${group.n}</span>${group.unknown?`<span class="mini">待 ${group.unknown}</span>`:''}</div><div class="bar"><span style="width:${100*group.pass/group.n}%"></span></div>`;}
+function stateBadge(ev){const cls=ev.status==='核心全部達標'?'ok':ev.blockers.length?'alert':ev.pendingMust.length?'wait':'';return `<span class="state ${cls}">${esc(ev.status)}</span>`;}
+function refresh(){
+  const all=currentSnapshots(),evaluated=all.map(r=>evaluate(r)),list=displayed();
+  $('totalStocks').textContent=all.length||'—';$('coreReady').textContent=all.length?evaluated.filter(e=>e.ready).length:'—';$('pendingMust').textContent=all.length?evaluated.filter(e=>e.blockers.length||e.pendingMust.length).length:'—';$('avgCompleteness').textContent=all.length?`${Math.round(evaluated.reduce((sum,e)=>sum+e.completeness,0)/all.length)}%`:'—';
+  $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 點選股票查看詳細條件與最近五個交易日曲線`:'匯入資料後可搜尋、篩選並點選股票。';
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr data-symbol="${esc(row['股票代號'])}" tabindex="0" title="點選查看個股明細"><td><div class="stock-name">${esc(row['股票名稱'])}</div><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td><td>${scoreCell(ev.core)}</td><td>${scoreCell(ev.basic)}</td><td>${scoreCell(ev.tech)}</td><td>${scoreCell(ev.chip)}</td><td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness>=90?'green':ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  $('empty').style.display=list.length?'none':'block';
+  $('empty').innerHTML=!all.length?'<div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p>':'<div class="empty-icon">⌕</div><h3>沒有符合條件的股票</h3><p>試著調整股票名稱、主要族群或核心狀態。</p>';
+  if(openedSymbol)renderDetails(openedSymbol);
+}
+function refreshSelectors(keepDate){
+  const dates=[...dataMap.keys()].sort().reverse();const requested=keepDate&&dates.includes(keepDate)?keepDate:dates[0];
+  $('date').innerHTML=dates.length?dates.map(d=>`<option value="${esc(d)}" ${requested===d?'selected':''}>資料日 ${esc(d)}</option>`).join(''):'<option value="">尚無資料日期</option>';
+  const allMajors=[...new Set([...dataMap.values()].flatMap(m=>[...m.values()].flatMap(majors)))].sort((a,b)=>a.localeCompare(b,'zh-Hant'));
+  const oldMajor=$('major').value;$('major').innerHTML='<option value="">所有主要族群</option>'+allMajors.map(s=>`<option value="${esc(s)}">${esc(s)}</option>`).join('');if(allMajors.includes(oldMajor))$('major').value=oldMajor;
+  refresh();
+}
+function recentHistory(symbol, uptoDate){return [...dataMap.keys()].filter(d=>d<=uptoDate&&dataMap.get(d).has(symbol)).sort().slice(-5).map(date=>({date,row:dataMap.get(date).get(symbol),ev:evaluate(dataMap.get(date).get(symbol))}));}
+function renderChart(history){
+  if(!history.length)return '<div class="hint" style="padding:40px;text-align:center">沒有可用的歷史交易日資料</div>';
+  const W=750,H=270,L=51,R=20,T=17,B=42,plotW=W-L-R,plotH=H-T-B;
+  const X=i=>history.length===1?L+plotW/2:L+plotW*i/(history.length-1),Y=p=>T+plotH*(1-p/100);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="最近最多五個交易日核心、技術及籌碼達標比例折線圖">`;
+  for(const t of [0,25,50,75,100]){const y=Y(t);svg+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="#273349" stroke-dasharray="4 5"/><text x="${L-12}" y="${y+4}" text-anchor="end" font-size="11" fill="#6b7a92">${t}%</text>`;}
+  history.forEach((h,i)=>{svg+=`<text x="${X(i)}" y="${H-14}" text-anchor="middle" font-size="11" fill="#8c9bb2">${esc(niceDate(h.date))}</text>`;});
+  for(const g of GROUPS.filter(g=>g.k!=='basic')){
+    const points=history.map((h,i)=>{const e=h.ev[g.k];return {e,x:X(i),y:Y(100*e.pass/g.n),valid:e.unknown<g.n,date:h.date};});
+    let seq=[];const flush=()=>{if(seq.length>1)svg+=`<polyline points="${seq.map(pt=>`${pt.x},${pt.y}`).join(' ')}" fill="none" stroke="${g.color}" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>`;seq=[];};
+    points.forEach(pt=>{if(pt.valid)seq.push(pt);else flush()});flush();
+    points.filter(pt=>pt.valid).forEach(pt=>{svg+=`<circle cx="${pt.x}" cy="${pt.y}" r="5" fill="${pt.e.unknown?'#161e2d':g.color}" stroke="${g.color}" stroke-width="2"><title>${esc(pt.date)} ${g.title}：${pt.e.pass}/${g.n}${pt.e.unknown?`（${pt.e.unknown} 項資料不足）`:''}</title></circle>`;});
+  }
+  svg+='</svg>';
+  return `<div class="chart-wrap">${svg}</div><div class="legend">${GROUPS.filter(g=>g.k!=='basic').map(g=>`<span><i class="dot" style="background:${g.color}"></i>${g.title}（/${g.n}）</span>`).join('')}</div><p class="hint" style="text-align:center;margin:12px 0 0">顯示已匯入資料中最近 ${history.length} 個交易日。空心點代表該日有缺資料，滑過點可查看原始分數。</p>`;
+}
+function displayRule(r){const isPass=r.status==='pass',isFail=r.status==='fail';return `<div class="rule-row"><div><div class="rule-label">${esc(r.label)}${r.must?'<span class="key">必要</span>':''}</div><div class="rule-desc">${esc(r.criteria)}</div><div class="rule-value">${esc(r.detail)}</div></div><div class="rule-status ${esc(r.status)}">${isPass?'✓ 達標':isFail?'× 未達標':'? 未確認'}</div></div>`;}
+function renderRisk(row){const fields=[['融資餘額近五日變化','feature__margin_change_5d','feature__margin_change_5d_flag','feature__margin_pressure','融資壓力'],['借券餘額近五日變化','feature__sbl_change_5d','feature__sbl_change_5d_flag','feature__sbl_pressure_5d','借券壓力']];
+  return fields.map(([name,change,flag,pressure,pname])=>{let ch=n(row[change]),fl=String(row[flag]||''),pr=n(row[pressure]);if((change.includes('margin')&&b(row.has_margin)===false)||(change.includes('sbl')&&b(row.has_sbl)===false)){ch=null;pr=null;}
+    const status=fl==='NEW_POSITION'?'新建部位（變化率不適用）':fl==='ZERO_TO_ZERO'?'前後均為 0':ch===null?'資料不足':pct(ch);
+    return `<div class="risk-item"><div class="main">${name}</div><div class="info">${esc(status)}</div><div class="info">${pname}：${pr===null?'—':fmt(pr,2)+' 天均量'}</div></div>`;}).join('');}
+function renderDetails(symbol){const date=getSelectedDate(),row=dataMap.get(date)?.get(symbol);if(!row){closeDrawer();return;}const ev=evaluate(row);const hist=recentHistory(symbol,date);const f=ev.fund;
+  $('detailName').textContent=`${row['股票名稱']}　${symbol}`;$('detailSub').textContent=`${date} · ${majors(row).join(' / ')||'未分類'} · ${ev.status}`;
+  let metricHtml=GROUPS.map(g=>{const e=ev[g.k];return `<div class="dmetric"><div class="k">${g.title}</div><div class="v">${e.unknown===e.n?'—':e.pass}/${g.n}</div><div class="m">${e.unknown?`待確認 ${e.unknown} 項`:'全部可判定'}</div></div>`;}).join('');metricHtml+=`<div class="dmetric"><div class="k">資料完整度</div><div class="v">${ev.completeness}%</div><div class="m">有效來源欄位覆蓋率</div></div>`;
+  const notices=[];
+  if(ev.blockers.length)notices.push(`核心必要條件未達標：${ev.blockers.map(x=>x.label).join('、')}`);
+  if(ev.pendingMust.length)notices.push(`核心必要條件資料不足：${ev.pendingMust.map(x=>x.label).join('、')}`);
+  if(!f)notices.push('尚未匯入可用於此交易日的 fundamental_YYYYMM.csv，基本面五項全部無法判定。');
+  else if(ev.basic.unknown)notices.push(`基本面有 ${ev.basic.unknown} 項資料不足（去年同季或本季根本沒抓到），不應當成未達標。`);
+  if(f)notices.push(`季報 ${f['fin__quarter']||'—'} 滯後約 3.5 個月，回答的是「有沒有基本面支撐」，不是「今天為什麼漲」；月營收滯後約 10 天，較即時。`);
+  const rules=GROUPS.map(g=>{const e=ev[g.k];return `<details ${g.k==='core'?'open':''}><summary><span><strong>${g.title}檢查</strong><span class="hint" style="margin-left:9px">${e.pass}/${g.n} 達標 · ${e.unknown} 項待確認</span></span></summary><div>${e.details.map(displayRule).join('')}</div></details>`;}).join('');
+  const fundLine=f?`基本面快照：${esc(f['快照年月'])}（${esc(f['可取得日'])} 起可用）· 營收月份 ${esc(f['rev__month']||'—')} · 季報 ${esc(f['fin__quarter']||'—')}`:'基本面快照：未接入';
+  $('detailBody').innerHTML=`<div class="dmetrics">${metricHtml}</div>${notices.length?`<div class="notice">${notices.map(esc).join('<br>')}</div>`:''}<section class="section"><h3 class="section-title">最近一週｜核心、技術、籌碼的歷史分數</h3>${renderChart(hist)}</section><section class="section"><h3 class="section-title">全部評分條件與未達標項目</h3><div class="hint">以中文顯示門檻與實際數值。核心必要條件即使總分高仍會提示。</div>${rules}</section><section class="section"><h3 class="section-title">籌碼風險觀察（不計分）</h3><div class="risk-grid">${renderRisk(row)}</div><p class="hint">融資與借券餘額增減需搭配股價及市場結構，這裡不設未驗證的固定警戒值。</p></section><div class="hint" style="padding:12px 3px">資料日期：${esc(date)} · 集保基準日：${esc(row['holders__as_of_date']||'未提供')} · ${fundLine}。歷史得分以 v1.1 規則回算。</div>`;
+}
+function openDrawer(symbol){openedSymbol=symbol;renderDetails(symbol);$('overlay').classList.add('open');$('drawer').classList.add('open');$('drawer').setAttribute('aria-hidden','false');document.body.style.overflow='hidden';$('close').focus();}
+function closeDrawer(){openedSymbol=null;$('overlay').classList.remove('open');$('drawer').classList.remove('open');$('drawer').setAttribute('aria-hidden','true');document.body.style.overflow='';}
+$('close').addEventListener('click',closeDrawer);$('overlay').addEventListener('click',closeDrawer);document.addEventListener('keydown',e=>{if(e.key==='Escape')closeDrawer();});
+$('rows').addEventListener('click',e=>{const tr=e.target.closest('tr[data-symbol]');if(tr)openDrawer(tr.getAttribute('data-symbol'));});
+$('rows').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){const tr=e.target.closest('tr[data-symbol]');if(tr){e.preventDefault();openDrawer(tr.getAttribute('data-symbol'));}}});
+['search','major','status','date'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',refresh));
+$('fileInput').addEventListener('change',async ev=>{
+  const files=[...ev.target.files];if(!files.length)return;
+  if(isDemo)clearData();let total=0,fund=0,fail=[];
+  for(const file of files){try{
+      const rows=csvParse(await file.text());const head=rows[0]||{};
+      if('indicator__MA20' in head)total+=addAnalysis(rows,file.name);
+      else if('rev__yoy_pct' in head)fund+=addFundamental(rows,file.name);
+      else throw new Error('欄位無法識別。請提供 analysis_data_YYYYMMDD.csv 或 fundamental_YYYYMM.csv');}
+    catch(err){fail.push(`${file.name}：${err.message}`);}}
+  refreshSelectors(getSelectedDate());
+  notify(`已匯入 ${total} 筆每日股票紀錄、${fund} 筆基本面紀錄。累計 ${dataMap.size} 個交易日。${fail.length?'未成功：'+fail.join('；'):''}`,!!fail.length);
+  ev.target.value='';
+});
+function demo(){clearData();isDemo=true;$('demoRibbon').classList.add('show');
+  const symbols=[['D001','測試股票甲','AI Server|散熱'],['D002','測試股票乙','PCB|CCL'],['D003','測試股票丙','記憶體|IC 設計']];
+  const dates=['2026-10-05','2026-10-06','2026-10-07','2026-10-08','2026-10-09'];
+  dates.forEach((date,di)=>{symbols.forEach(([symbol,name,major],si)=>{
+    const ma20=105+si*20+di*1.2,ma60=102+si*20+di*.4;
+    const row={'股票代號':symbol,'股票名稱':name,'市場':'TWSE','分析日期':date,'major_group':major,'has_price':'True','has_institution':'True','has_holders':'True','has_margin':'True','has_sbl':'True','valid_price_days':'220','price__date':date,'price__is_valid_ohlc':'True','holders__as_of_date':'2026-10-02','feature__holders_history_weeks_available':'9',
+    'indicator__MA20':String(ma20),'indicator__MA60':String(ma60),'indicator__ma20_slope_10d':String(.008+di*.001),'indicator__close':String(ma20+2-si),'feature__higher_low_label':si===2&&di<2?'下移':'守住','feature__not_breach_20d_low':si===2&&di<2?'False':'True',
+    'feature__foreign_ratio_5d':String(-.01+.004*di-.0015*si),'feature__trust_ratio_5d':String(-.002+.0018*di),'feature__holder_over_400_lots_pct_change_2w_pp':String(-.2+di*.12-.03*si),'feature__retrace_volume_ratio':String(1.1-di*.08+si*.03),'indicator__excess20':String(-.04+.017*di-.009*si),'feature__stagnation_flag':di===0?'True':'False',
+    'indicator__MA5':String(ma20+2.2+di*.5),'indicator__MA10':String(ma20+1.4),'indicator__ma60_slope_20d':String(.001*di+.004),'indicator__ma20_slope_recent_5d':String(.008+di*.001),'indicator__ma20_slope_prev_5d':'.009','indicator__RSI14_5D_Delta':String(-1+di*.85-si*.4),'indicator__K9':String(42+di*5),'indicator__D9':String(46+di*2),'indicator__MACD_HIST_3D_SLOPE':String(-.02+.01*di-si*.002),'feature__blowoff_conditions_met':di>=4&&si===0?'2':'1',
+    'feature__foreign_ratio_10d':String(-.016+di*.006-si*.004),'feature__trust_ratio_10d':String(-.007+di*.003-si*.001),'feature__holder_over_400_lots_pct_change_4w_pp':String(-.1+di*.12-si*.04),'feature__holder_over_1000_lots_pct_change_2w_pp':String(-.04+di*.06-si*.06),
+    'feature__margin_change_5d':String(.02+di*.01),'feature__margin_pressure':String(3.2+si),'feature__margin_change_5d_flag':'NORMAL','feature__sbl_change_5d':String(.03-.007*di),'feature__sbl_pressure_5d':String(1.5+si*.3),'feature__sbl_change_5d_flag':'NORMAL'};
+    addAnalysis([row],`analysis_data_${date.replace(/-/g,'')}.csv`);
+  });});
+  // 示範的基本面用 2026-08 的快照：可取得日 2026-09-11，對上面五個 10 月的交易日都成立。
+  symbols.forEach(([symbol],i)=>addFundamental([{'股票代號':symbol,'快照年月':'2026-08','rev__month':'2026-08',
+    'rev__yoy_pct':String(15-i*12),'rev__yoy_m0':String(15-i*12),'rev__yoy_m1':String(12-i*9),'rev__yoy_m2':String(9-i*6),'rev__yoy_trend':i===0?'轉強':'持平',
+    'fin__quarter':'2026Q2','fin__eps_q':String(3.2-i*1.8),'fin__eps_q_yoy_pct':i===1?'':String(28-i*40),
+    'fin__op_income_q_yoy_pct':String(18-i*22),'fin__gross_margin_pct':String(32-i*3),'fin__gross_margin_delta_pp':String(1.8-i*2.1),'fin__quarters_available':'4'}],'fundamental_202608.csv'));
+  refreshSelectors();notify('已載入 3 檔虛構股票 × 5 個交易日作為介面測試，所有名稱和數值均為示範資料。');
+}
+$('demoBtn').addEventListener('click',demo);
+refreshSelectors();
+
+// 自動載入。發佈到 GitHub Pages 時 dashboard/build_site.py 會在同一層產生
+// manifest.json；本機直接開檔（file://）抓不到，就安靜退回手動匯入，不報錯。
+async function autoload(){
+  let manifest;
+  try{
+    const res=await fetch('manifest.json',{cache:'no-cache'});
+    if(!res.ok)return;
+    manifest=await res.json();
+  }catch(err){return;}   // file:// 或沒有 manifest，兩者都當成「手動模式」
+  const files=[...(manifest.analysis||[]),...(manifest.fundamental?[manifest.fundamental]:[])];
+  if(!files.length)return;
+  notify(`載入中… 共 ${files.length} 份檔案`);
+  let total=0,fund=0;const fail=[];
+  // 逐份抓而不是 Promise.all：單一檔案壞掉時其他的照樣進得去，
+  // 而且訊息能明確指出是哪一份。
+  for(const path of files){
+    try{
+      const res=await fetch(path,{cache:'no-cache'});
+      if(!res.ok)throw new Error('HTTP '+res.status);
+      const rows=csvParse(await res.text());const name=path.split('/').pop();
+      if('indicator__MA20' in (rows[0]||{}))total+=addAnalysis(rows,name);
+      else if('rev__yoy_pct' in (rows[0]||{}))fund+=addFundamental(rows,name);
+      else throw new Error('欄位無法識別');
+    }catch(err){fail.push(`${path}：${err.message}`);}
+  }
+  refreshSelectors();
+  notify(`已載入 ${dataMap.size} 個交易日、${total} 筆個股紀錄、${fund} 筆基本面`
+    +`（資料產生於 ${esc(manifest.generated||'未知')}）。`
+    +`${fail.length?' 未成功：'+fail.join('；'):''}`,!!fail.length);
+}
+autoload();
+</script>
+</body>
+</html>
