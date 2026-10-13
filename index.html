@@ -434,7 +434,7 @@ function refresh(){
   $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 依${esc(GROUPS.find(g=>g.k===sortKey).title)}達成率${sortDir==='desc'?'由高到低':'由低到高'} · 點標題換排序、點分數看未達標、點名稱開詳情`:'匯入資料後可搜尋、篩選並點選股票。';
   // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
   // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
-  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}${row['交易狀態']?` · ${esc(row['交易狀態'])}`:''}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
   document.querySelectorAll('.table th.sortable').forEach(th=>{
     const on=th.dataset.sort===sortKey;
     th.classList.toggle('sorted',on);
@@ -476,7 +476,7 @@ function renderRisk(row){const fields=[['融資餘額近五日變化','feature__
     const status=fl==='NEW_POSITION'?'新建部位（變化率不適用）':fl==='ZERO_TO_ZERO'?'前後均為 0':ch===null?'資料不足':pct(ch);
     return `<div class="risk-item"><div class="main">${name}</div><div class="info">${esc(status)}</div><div class="info">${pname}：${pr===null?'—':fmt(pr,2)+' 天均量'}</div></div>`;}).join('');}
 function renderDetails(symbol){const date=getSelectedDate(),row=dataMap.get(date)?.get(symbol);if(!row){closeDrawer();return;}const ev=evaluate(row);const hist=recentHistory(symbol,date);const f=ev.fund;
-  $('detailName').textContent=`${row['股票名稱']}　${symbol}`;$('detailSub').textContent=`${date} · ${majors(row).join(' / ')||'未分類'} · ${ev.status}`;
+  $('detailName').textContent=`${row['股票名稱']}　${symbol}`;$('detailSub').textContent=`${date} · ${majors(row).join(' / ')||'未分類'} · ${ev.status}${row['交易狀態']?` · ${row['交易狀態']}`:''}`;
   let metricHtml=GROUPS.map(g=>{const e=ev[g.k];return `<div class="dmetric"><div class="k">${g.title}</div><div class="v ${scoreTone(e)}">${e.unknown===e.n?'—':e.pass}/${g.n}</div><div class="m">${e.unknown?`待確認 ${e.unknown} 項`:'全部可判定'}</div></div>`;}).join('');metricHtml+=`<div class="dmetric"><div class="k">資料完整度</div><div class="v">${ev.completeness}%</div><div class="m">有效來源欄位覆蓋率</div></div>`;
   const notices=[];
   if(ev.blockers.length)notices.push(`核心必要條件未達標：${ev.blockers.map(x=>x.label).join('、')}`);
