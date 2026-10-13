@@ -65,7 +65,7 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .section-heading h2{font-size:16px;color:var(--head);margin:0}
 .hint{font-size:12px;color:var(--muted)}
 .table-scroll{overflow:auto}
-.table{width:100%;border-collapse:collapse;min-width:980px}
+.table{width:100%;border-collapse:collapse;min-width:860px}
 .table th{text-align:left;white-space:nowrap;background:var(--card2);color:var(--muted);font-size:11px;font-weight:700;padding:12px 17px;border-bottom:1px solid var(--line)}
 .table td{padding:15px 17px;border-bottom:1px solid var(--line-soft);vertical-align:middle}
 .table tbody tr{transition:background .15s}
@@ -76,15 +76,19 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .table tbody tr:hover{background:#1d273a}
 .table tbody tr:last-child td{border-bottom:0}
 .stock-id{font-size:12px;color:var(--dim);margin-top:2px}
-.tags{display:flex;gap:5px;max-width:280px;flex-wrap:wrap}
-.tag{font-size:11px;background:#223150;color:#9bb6da;border-radius:7px;padding:3px 7px;white-space:nowrap}
+.tags{display:flex;flex-direction:column;align-items:flex-start;gap:4px}
+/* 160px 剛好放得下最長的「化合物半導體元件／晶圓代工」（13 字 × 11px + 左右內距）。
+   仍然允許換行，將來出現更長的名稱會折行而不是撐破欄位。
+   min-width 不能寫成 width——table 版面只把 width 當建議值，一旦內容可換行就會
+   把欄位壓到 78px。 */
+.tag{font-size:11px;background:#223150;color:#9bb6da;border-radius:7px;padding:3px 7px;line-height:1.35}
+.col-group{min-width:160px;width:160px}
 .score{display:flex;gap:5px;align-items:baseline;white-space:nowrap}
 .score .value{font-size:16px;font-weight:800;color:var(--head)}
 .score .value.empty{color:var(--dim)}
 .score .mini{font-size:10px;color:var(--amber)}
 .bar{width:85px;height:5px;border-radius:10px;overflow:hidden;background:var(--track);margin-top:6px}
 .bar span{height:100%;display:block;background:var(--blue)}
-.bar.green span{background:var(--green)}
 .bar.warning span{background:var(--amber)}
 .bar.s-all span{background:var(--s-all)}
 .bar.s-half span{background:var(--s-half)}
@@ -189,7 +193,7 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
       <label class="field select date"><select id="date" aria-label="檢視資料日期"><option value="">尚無資料日期</option></select></label>
     </div>
     <div class="section-heading"><h2>個股快速總覽</h2><div class="hint" id="tableHint">匯入資料後可搜尋、篩選並點選股票。</div></div>
-    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th>主要族群</th><th>核心</th><th>基本面</th><th>技術面</th><th>籌碼面</th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th class="col-group">主要族群</th><th>核心</th><th>基本面</th><th>技術面</th><th>籌碼面</th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div class="empty-area" id="empty"><div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p></div>
   </section>
   <div class="footer"><span>規則 v1.1 · 核心 8／基本面 5／技術 7／籌碼 4</span><span>本機離線計算，不會自動上傳或連線 GitHub。分數不代表未來報酬機率。</span></div>
@@ -392,8 +396,11 @@ function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('maj
 // 另外釘住「只有 1 個達標」一定是紅：1/4 的比例是 25%，不特別處理會掉進橘色。
 const HALF = 0.5, LOW = 0.25;
 function scoreTone(group){
-  if(group.unknown===group.n)return '';          // 一項都判不出來，不上色
-  if(group.pass===group.n)return 's-all';        // 全部達標（此時 unknown 必為 0）
+  // 有任何一項未確認就不上色。顏色是在替這組下結論，而「不知道」還沒到能下結論的
+  // 程度——7/8 帶 1 項未確認其實可能是 8/8，塗成黃色等於先判了它一次。
+  // 分數旁邊的「待 N」才是這種情況該看的訊號。
+  if(group.unknown)return '';
+  if(group.pass===group.n)return 's-all';
   const r=group.pass/group.n;
   if(group.pass<=1||r<LOW)return 's-min';
   if(r<HALF)return 's-low';
@@ -411,7 +418,7 @@ function refresh(){
   $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 點選股票查看詳細條件與最近五個交易日曲線`:'匯入資料後可搜尋、篩選並點選股票。';
   // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
   // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
-  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness>=90?'green':ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
   hidePop();   // tbody 整個重建，原本的錨點已經不存在了
   $('empty').style.display=list.length?'none':'block';
   $('empty').innerHTML=!all.length?'<div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p>':'<div class="empty-icon">⌕</div><h3>沒有符合條件的股票</h3><p>試著調整股票名稱、主要族群或核心狀態。</p>';
