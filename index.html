@@ -21,11 +21,12 @@
   --red:#e4707e;
   --amber:#d9a441;
   --purple:#a98fd4;
-  /* 台股配色：紅＝漲＝全部達標，綠＝跌＝達成很少。
-     只用在「幾項達標」這種彙總數字上。詳情頁逐項的 ✓／× 仍是通用的
-     綠＝達標、紅＝未達標——那是兩套語意，刻意用不同色階避免看成同一件事。 */
-  --up:#f0564a;
-  --down:#1fae6a;
+  /* 彙總分數的四段熱度：達標越多越綠，越少越紅。
+     跟詳情頁逐項的 ✓＝綠、×＝紅同向，所以整頁的綠一律是「好」，不會一詞兩義。 */
+  --s-all:#2fbf71;    /* 全部達標 */
+  --s-half:#e3c04a;   /* 過半但未滿 */
+  --s-low:#ef8c3f;    /* 偏低 */
+  --s-min:#f0564a;    /* 極低 */
   --track:#232e45;      /* 進度條底 */
   --shadow:0 14px 34px rgba(0,0,0,.45);
 }
@@ -83,13 +84,16 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .score .mini{font-size:10px;color:var(--amber)}
 .bar{width:85px;height:5px;border-radius:10px;overflow:hidden;background:var(--track);margin-top:6px}
 .bar span{height:100%;display:block;background:var(--blue)}
-.bar.up span{background:var(--up)}
-.bar.down span{background:var(--down)}
+.bar.green span{background:var(--green)}
 .bar.warning span{background:var(--amber)}
-.score .value.up{color:var(--up)}
-.score .value.down{color:var(--down)}
-.dmetric .v.up{color:var(--up)}
-.dmetric .v.down{color:var(--down)}
+.bar.s-all span{background:var(--s-all)}
+.bar.s-half span{background:var(--s-half)}
+.bar.s-low span{background:var(--s-low)}
+.bar.s-min span{background:var(--s-min)}
+.score .value.s-all,.dmetric .v.s-all,.pop-score.s-all{color:var(--s-all)}
+.score .value.s-half,.dmetric .v.s-half,.pop-score.s-half{color:var(--s-half)}
+.score .value.s-low,.dmetric .v.s-low,.pop-score.s-low{color:var(--s-low)}
+.score .value.s-min,.dmetric .v.s-min,.pop-score.s-min{color:var(--s-min)}
 .state{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;border-radius:8px;padding:5px 8px;white-space:nowrap;background:#222c42;color:#9aa9c0}
 .state.ok{background:rgba(53,192,138,.14);color:var(--green)}
 .state.alert{background:rgba(228,112,126,.14);color:var(--red)}
@@ -378,16 +382,22 @@ function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('maj
     if(status==='missing'&&e.completeness>=80)return false;return true;
   }).sort((a,b)=>b.ev.core.pass-a.ev.core.pass||b.ev.completeness-a.ev.completeness||String(a.row['股票代號']).localeCompare(String(b.row['股票代號'])));
 }
-// 台股習慣：紅＝漲、綠＝跌。所以「全部達標」是紅、「達成很少」是綠。
-// 門檻取 1/3 是看實際分布定的（2026-10-13、163 檔）：7 項裡只中 2 項確實算少，
-// 而 1/4 會讓技術面的綠色從 55 檔掉到 21 檔，少到看不出區別。改這一個數字就好。
-const WEAK_RATIO = 1 / 3;
+// 四段熱度。四個模組的分母不同（8／5／7／4），所以用比例而不是絕對數量——
+// 「只有 2、3 個達標」在 /8 是偏低，在 /4 卻已經過半，同一句話換個分母就變調。
+//
+// 對照核心 /8：1→紅、2 和 3→橘、4（一半）→黃、8→綠，技術面 /7 也完全吻合。
+// /4 與 /5 的「2、3 個＝橘」和「一半＝黃」本身互相衝突（籌碼面 2/4 兩條都中），
+// 這裡讓「一半＝黃」勝出，因為只有它跨分母還成立。
+//
+// 另外釘住「只有 1 個達標」一定是紅：1/4 的比例是 25%，不特別處理會掉進橘色。
+const HALF = 0.5, LOW = 0.25;
 function scoreTone(group){
-  if(group.unknown===group.n)return '';                 // 全部無法判定，不上色
-  if(group.pass===group.n)return 'up';                  // 全部達標（此時 unknown 必為 0）
-  // 有未確認項目時不塗綠：那是「不知道」，不是「做不到」，塗成跌色會冤枉它
-  if(group.unknown===0&&group.pass/group.n<=WEAK_RATIO)return 'down';
-  return '';
+  if(group.unknown===group.n)return '';          // 一項都判不出來，不上色
+  if(group.pass===group.n)return 's-all';        // 全部達標（此時 unknown 必為 0）
+  const r=group.pass/group.n;
+  if(group.pass<=1||r<LOW)return 's-min';
+  if(r<HALF)return 's-low';
+  return 's-half';
 }
 function scoreCell(group,symbol,key,title){
   const c=group.unknown===group.n?'—':group.pass,tone=scoreTone(group);
@@ -401,7 +411,7 @@ function refresh(){
   $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 點選股票查看詳細條件與最近五個交易日曲線`:'匯入資料後可搜尋、篩選並點選股票。';
   // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
   // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
-  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}</div></td><td><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness>=90?'green':ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
   hidePop();   // tbody 整個重建，原本的錨點已經不存在了
   $('empty').style.display=list.length?'none':'block';
   $('empty').innerHTML=!all.length?'<div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p>':'<div class="empty-icon">⌕</div><h3>沒有符合條件的股票</h3><p>試著調整股票名稱、主要族群或核心狀態。</p>';
