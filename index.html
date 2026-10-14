@@ -27,6 +27,10 @@
   --s-half:#e3c04a;   /* 過半但未滿 */
   --s-low:#ef8c3f;    /* 偏低 */
   --s-min:#f0564a;    /* 極低 */
+  /* 輪動標記。刻意用藍／紫／灰，避開分數那套綠黃橘紅——同一列兩套色系會打架。 */
+  --mk-in:#5b91f0;
+  --mk-relay:#a98fd4;
+  --mk-out:#8c9bb2;
   --track:#232e45;      /* 進度條底 */
   --shadow:0 14px 34px rgba(0,0,0,.45);
 }
@@ -108,6 +112,19 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
 .state.alert{background:rgba(228,112,126,.14);color:var(--red)}
 .state.wait{background:rgba(217,164,65,.14);color:var(--amber)}
 .complete-value{font-weight:800}
+.col-mark{min-width:92px;width:92px}
+.mk{display:flex;flex-direction:column;gap:3px}
+.mk-row{display:flex;align-items:center;gap:5px}
+.mk-tag{width:13px;text-align:center;font-size:11px;font-weight:800;color:var(--dim)}
+.mk-dots{display:flex;gap:3px}
+.mk-dot{width:7px;height:7px;border-radius:50%;background:var(--track);display:block;cursor:help}
+.mk-in .mk-tag{color:var(--mk-in)}
+.mk-in .mk-dot.on{background:var(--mk-in)}
+.mk-relay .mk-tag{color:var(--mk-relay)}
+.mk-relay .mk-dot.on{background:var(--mk-relay)}
+.mk-out .mk-tag{color:var(--mk-out)}
+.mk-out .mk-dot.on{background:var(--mk-out)}
+.mk-none{color:var(--dim);font-size:12px}
 .pop{position:fixed;z-index:30;width:min(360px,calc(100vw - 24px));background:var(--card);border:1px solid var(--line);border-radius:13px;box-shadow:0 18px 44px rgba(0,0,0,.6);padding:13px 15px;display:none}
 .pop.open{display:block}
 .pop-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:4px}
@@ -193,12 +210,13 @@ main{max-width:1480px;margin:0 auto;padding:28px 30px 60px}
     <div class="toolbar">
       <label class="field search"><span class="search-icon" aria-hidden="true">⌕</span><input id="search" type="search" placeholder="搜尋股票名稱或代號" aria-label="搜尋股票名稱或代號"></label>
       <label class="field select"><select id="major" aria-label="篩選主要族群"><option value="">所有主要族群</option></select></label>
+      <label class="field select"><select id="marker" aria-label="篩選輪動標記"><option value="">輪動標記：不限</option></select></label>
       <label class="field select"><select id="status" aria-label="篩選狀態"><option value="all">所有條件狀態</option><option value="ready">核心 8 項全達標</option><option value="near">核心只差 1～2 項</option><option value="block">必要條件不符合</option><option value="missing">資料完整度不足 80%</option></select></label>
       <span class="toolbar-spacer"></span>
       <label class="field select date"><select id="date" aria-label="檢視資料日期"><option value="">尚無資料日期</option></select></label>
     </div>
     <div class="section-heading"><h2>個股快速總覽</h2><div class="hint" id="tableHint">匯入資料後可搜尋、篩選並點選股票。</div></div>
-    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th class="col-group">主要族群</th><th class="sortable" data-sort="core" tabindex="0" role="button">核心<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="basic" tabindex="0" role="button">基本面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="tech" tabindex="0" role="button">技術面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="chip" tabindex="0" role="button">籌碼面<span class="sort-arrow">↕</span></th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
+    <div class="table-scroll"><table class="table" aria-label="股票觀察總覽"><thead><tr><th>股票</th><th class="col-group">主要族群</th><th class="col-mark">輪動標記</th><th class="sortable" data-sort="core" tabindex="0" role="button">核心<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="basic" tabindex="0" role="button">基本面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="tech" tabindex="0" role="button">技術面<span class="sort-arrow">↕</span></th><th class="sortable" data-sort="chip" tabindex="0" role="button">籌碼面<span class="sort-arrow">↕</span></th><th>資料完整度</th><th>觀察狀態</th></tr></thead><tbody id="rows"></tbody></table></div>
     <div class="empty-area" id="empty"><div class="empty-icon">▤</div><h3>尚未載入每日分析資料</h3><p>匯入一份或多份 <code>analysis_data_YYYYMMDD.csv</code>，<br>以及 <code>fundamental_YYYYMM.csv</code>（可選）即可開始檢視。</p></div>
   </section>
   <div class="footer"><span>規則 v1.1 · 核心 8／基本面 5／技術 7／籌碼 4</span><span>本機離線計算，不會自動上傳或連線 GitHub。分數不代表未來報酬機率。</span></div>
@@ -238,6 +256,12 @@ const RULES = [
 {"group":"chip","id":"P2","label":"投信中期買盤","criteria":"投信最近 10 日淨買超比率 > 0","fields":["feature__trust_ratio_10d"],"why":"","must":false},
 {"group":"chip","id":"P3","label":"400 張大戶持續增加","criteria":"400 張以上大戶近 4 週持股比例變化 > 0 百分點","fields":["feature__holder_over_400_lots_pct_change_4w_pp"],"why":"必須至少 5 週有效歷史","must":false},
 {"group":"chip","id":"P4","label":"1000 張大戶增加","criteria":"1000 張以上大戶近 2 週持股比例變化 > 0 百分點","fields":["feature__holder_over_1000_lots_pct_change_2w_pp"],"why":"與 400 張級距有包含關係","must":false}];
+// 輪動標記：scoring/export_labels.py 從試算表的三個預測分頁匯出。
+// 存的是 group 不是股票——股票↔族群的對應在這裡用「當天的」analysis_data 做，
+// 分類改了也不會回頭污染歷史，跟計分 members_on(資料日) 的道理一樣。
+let labels = null;
+const MARKERS = [{k:'流入',ch:'入',cls:'mk-in'},{k:'接棒',ch:'棒',cls:'mk-relay'},{k:'流出',ch:'出',cls:'mk-out'}];
+const MARK_DAYS = 5;
 const dataMap = new Map();        // 分析日 -> Map(股票代號 -> 原始列)
 const fundamentalMap = new Map(); // 股票代號 -> 依可取得日排序的基本面快照
 let isDemo = false, openedSymbol = null;
@@ -272,7 +296,7 @@ function csvParse(source){
 }
 const notify = (txt,warning=false) => {const el=$('message');el.textContent=txt;el.classList.add('visible');
   el.style.background=warning?'rgba(217,164,65,.09)':'#14243f';el.style.borderColor=warning?'rgba(217,164,65,.3)':'#27406b';el.style.color=warning?'#e0bd77':'#9fc0f0';};
-function clearData(){dataMap.clear();fundamentalMap.clear();openedSymbol=null;closeDrawer();isDemo=false;$('demoRibbon').classList.remove('show');}
+function clearData(){dataMap.clear();fundamentalMap.clear();labels=null;openedSymbol=null;closeDrawer();isDemo=false;$('demoRibbon').classList.remove('show');}
 function addAnalysis(rows,file){
   if(!rows.length)return 0;
   if(!('股票代號' in rows[0])||!('股票名稱' in rows[0])||!('indicator__MA20' in rows[0]))throw new Error(`${file}：不是預期的 analysis_data 欄位格式`);
@@ -379,17 +403,54 @@ function evaluate(row){
   return {...evaluations,completeness,blockers,pendingMust,ready,status,fund:f};
 }
 function majors(row){return String(row.major_group||'').split('|').map(s=>s.trim()).filter(Boolean);}
+function subsOf(row){return new Set(String(row.sub_groups||'').split('|').map(s=>s.trim()).filter(Boolean));}
+// 以 upto 為右端、往回取最多 5 個已匯入的交易日。跟詳情頁折線圖用同一套視窗，
+// 所以兩邊看到的「最近五天」一定是同一批日期。
+function markerDays(upto){return [...dataMap.keys()].filter(d=>d<=upto).sort().slice(-MARK_DAYS);}
+function markerHits(symbol,upto){
+  if(!labels)return null;
+  const days=markerDays(upto),out=[];
+  for(const m of MARKERS){
+    const cells=days.map(d=>{
+      const row=dataMap.get(d)?.get(symbol);if(!row)return null;
+      const subs=subsOf(row);
+      const got=(((labels.days||{})[d]||{})[m.k]||[]).filter(x=>subs.has(x.group));
+      return got.length?{got}:null;
+    });
+    if(cells.some(Boolean))out.push({m,days,cells});
+  }
+  return out;
+}
+function markerCell(symbol,upto){
+  const rows=markerHits(symbol,upto);
+  if(rows===null)return '<td class="col-mark"></td>';
+  if(!rows.length)return '<td class="col-mark"><span class="mk-none">—</span></td>';
+  const tip=(day,m,c)=>c
+    ? `${day} ${m.k}：`+c.got.map(g=>`${g.group}${g.rank?' #'+g.rank:''}${g.state?'（'+g.state+'）':''}`).join('、')
+    : `${day} 無${m.k}`;
+  return '<td class="col-mark"><div class="mk">'+rows.map(({m,days,cells})=>
+    `<div class="mk-row ${m.cls}"><span class="mk-tag">${m.ch}</span><span class="mk-dots">`
+    +cells.map((c,i)=>`<i class="mk-dot ${c?'on':''}" title="${esc(tip(days[i],m,c))}"></i>`).join('')
+    +'</span></div>').join('')+'</div></td>';
+}
+// scope: 'today' 只看所選資料日、'win' 看整個五日視窗
+function markerMatch(symbol,upto,scope,kind){
+  const rows=markerHits(symbol,upto);if(!rows)return false;
+  const r=rows.find(x=>x.m.k===kind);if(!r)return false;
+  return scope==='win'||!!r.cells[r.cells.length-1];
+}
 function getSelectedDate(){return $('date').value;}
 function currentSnapshots(){return Array.from(dataMap.get(getSelectedDate())?.values()||[]);}
 // 排序狀態。預設就是「核心達成率高的在上面」，跟點一下核心標題的結果一致——
 // 一開始就把箭頭標出來，畫面才對得上實際的排列方式。
 let sortKey='core',sortDir='desc';
-function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('major').value,status=$('status').value;
+function displayed(){const q=$('search').value.trim().toLowerCase(),major=$('major').value,status=$('status').value,mark=$('marker').value,date=getSelectedDate();
   const g=GROUPS.find(x=>x.k===sortKey),sign=sortDir==='desc'?1:-1;
   const rate=x=>x.ev[sortKey].pass/g.n;
   return currentSnapshots().map(row=>({row,ev:evaluate(row)})).filter(x=>{
     const row=x.row,e=x.ev;if(q&&!String(row['股票代號']||'').toLowerCase().includes(q)&&!String(row['股票名稱']||'').toLowerCase().includes(q))return false;
     if(major&&!majors(row).includes(major))return false;
+    if(mark){const[scope,kind]=mark.split(':');if(!markerMatch(row['股票代號'],date,scope,kind))return false;}
     if(status==='ready'&&!e.ready)return false;
     if(status==='near'&&!(e.core.pass>=6&&e.core.pass<8&&e.blockers.length===0))return false;
     if(status==='block'&&!e.blockers.length)return false;
@@ -434,7 +495,18 @@ function refresh(){
   $('tableHint').textContent=all.length?`顯示 ${list.length} / ${all.length} 檔 · ${getSelectedDate()} · 依${esc(GROUPS.find(g=>g.k===sortKey).title)}達成率${sortDir==='desc'?'由高到低':'由低到高'} · 點標題換排序、點分數看未達標、點名稱開詳情`:'匯入資料後可搜尋、篩選並點選股票。';
   // 股票名稱開詳情、四個分數格開小卡，所以兩者都是按鈕，整列不再可點。
   // 完整度的進度條刻意不用綠色——綠在這張表裡已經代表「達成很少」了。
-  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}${row['交易狀態']?` · ${esc(row['交易狀態'])}`:''}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  $('rows').innerHTML=list.map(({row,ev})=>`<tr><td><button type="button" class="stock-open" data-symbol="${esc(row['股票代號'])}">${esc(row['股票名稱'])}</button><div class="stock-id">${esc(row['股票代號'])} · ${esc(row['市場']||'')}${row['交易狀態']?` · ${esc(row['交易狀態'])}`:''}</div></td><td class="col-group"><div class="tags">${(majors(row).length?majors(row):['未分類']).map(x=>`<span class="tag">${esc(x)}</span>`).join('')}</div></td>${markerCell(row['股票代號'],getSelectedDate())}${GROUPS.map(g=>scoreCell(ev[g.k],row['股票代號'],g.k,g.title)).join('')}<td><div class="complete-value">${ev.completeness}%</div><div class="bar ${ev.completeness<75?'warning':''}"><span style="width:${ev.completeness}%"></span></div></td><td>${stateBadge(ev)}</td></tr>`).join('');
+  // 選項附上符合檔數：「今日接棒（0）」比選下去看到空表好——那天還沒貼就是 0，不是壞了
+  const sel=$('marker'),keep=sel.value;
+  const date=getSelectedDate();
+  const opts=['<option value="">輪動標記：不限</option>'];
+  if(labels&&all.length)for(const scope of ['today','win'])for(const m of MARKERS){
+    const n=all.filter(r=>markerMatch(r['股票代號'],date,scope,m.k)).length;
+    opts.push(`<option value="${scope}:${esc(m.k)}">${scope==='today'?'今日':'5 日內'}${esc(m.k)}（${n}）</option>`);
+  }
+  sel.innerHTML=opts.join('');
+  if([...sel.options].some(o=>o.value===keep))sel.value=keep;
+  sel.disabled=!labels;
   document.querySelectorAll('.table th.sortable').forEach(th=>{
     const on=th.dataset.sort===sortKey;
     th.classList.toggle('sorted',on);
@@ -533,7 +605,7 @@ document.addEventListener('click',e=>{if(!e.target.closest('.score-cell')&&!e.ta
 // 捲動或改變視窗大小時小卡會跟錨點脫節，直接收起來比重算位置簡單也不會閃
 window.addEventListener('scroll',hidePop,true);
 window.addEventListener('resize',hidePop);
-['search','major','status','date'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',refresh));
+['search','major','status','marker','date'].forEach(id=>$(id).addEventListener(id==='search'?'input':'change',refresh));
 // 點分數欄的標題排序：同一欄再點一次換升降序，換一欄就回到由高到低
 document.querySelectorAll('.table th.sortable').forEach(th=>{
   th.addEventListener('click',()=>{
@@ -589,6 +661,13 @@ async function autoload(){
     if(!res.ok)return;
     manifest=await res.json();
   }catch(err){return;}   // file:// 或沒有 manifest，兩者都當成「手動模式」
+  if(manifest.labels){
+    // 標記抓不到不該擋住整頁——沒有它頁面照常運作，只是少一欄
+    try{
+      const res=await fetch(manifest.labels,{cache:'no-cache'});
+      if(res.ok)labels=await res.json();
+    }catch(err){}
+  }
   const files=[...(manifest.analysis||[]),...(manifest.fundamental?[manifest.fundamental]:[])];
   if(!files.length)return;
   notify(`載入中… 共 ${files.length} 份檔案`);

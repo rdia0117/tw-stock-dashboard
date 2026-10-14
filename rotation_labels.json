@@ -1,0 +1,280 @@
+{
+ "generated": "2026-10-14 21:52",
+ "days": {
+  "2026-10-07": {
+   "流入": [
+    {
+     "group": "AI 高階被動元件",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "矽光子／高速光通訊／主動光元件",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "玻纖布",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "半導體測試與量測設備",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "矽晶圓／特殊晶圓",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "半導體測試介面／探針卡",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 3,
+     "state": "剛起跌"
+    },
+    {
+     "group": "液冷",
+     "rank": 4,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "ODM／EMS",
+     "rank": 5,
+     "state": "跌勢收斂"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "矽光子／高速光通訊／主動光元件",
+     "rank": 1,
+     "state": "中高信心接棒"
+    },
+    {
+     "group": "半導體測試與量測設備",
+     "rank": 2,
+     "state": "中低信心接棒"
+    },
+    {
+     "group": "矽晶圓／特殊晶圓",
+     "rank": 3,
+     "state": "低信心接棒"
+    }
+   ]
+  },
+  "2026-10-08": {
+   "流入": [
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "玻纖布",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "高速網路／交換器／網通 IC",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "矽光子／高速光通訊／主動光元件",
+     "rank": 1,
+     "state": "剛起跌"
+    },
+    {
+     "group": "AI 高階被動元件",
+     "rank": 2,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 3,
+     "state": "剛起跌"
+    },
+    {
+     "group": "分離式功率半導體／二極體",
+     "rank": 4,
+     "state": "延續"
+    },
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 5,
+     "state": "剛起跌"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 1,
+     "state": "中高信心接棒"
+    },
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 2,
+     "state": "中信心接棒"
+    }
+   ]
+  },
+  "2026-10-12": {
+   "流入": [
+    {
+     "group": "半導體測試介面／探針卡",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "高速網路／交換器／網通 IC",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "ODM／EMS",
+     "rank": 3,
+     "state": "延續"
+    },
+    {
+     "group": "先進封裝組裝製程設備",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "半導體測試與量測設備",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "AI 高階被動元件",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "矽晶圓／特殊晶圓",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 3,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 4,
+     "state": "延續"
+    },
+    {
+     "group": "伺服器機殼／滑軌",
+     "rank": 5,
+     "state": "剛起跌"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "先進封裝組裝製程設備",
+     "rank": 1,
+     "state": "高信心接棒"
+    },
+    {
+     "group": "半導體測試介面／探針卡",
+     "rank": 2,
+     "state": "中高信心接棒"
+    },
+    {
+     "group": "ODM／EMS",
+     "rank": 3,
+     "state": "中高信心接棒"
+    },
+    {
+     "group": "高速網路／交換器／網通 IC",
+     "rank": 4,
+     "state": "中信心接棒"
+    }
+   ]
+  },
+  "2026-10-13": {
+   "流入": [
+    {
+     "group": "玻纖布",
+     "rank": 1,
+     "state": "高風險"
+    },
+    {
+     "group": "ODM／EMS",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "半導體特殊氣體／高純度先進製程材料",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "AI Edge／工業電腦／嵌入式系統",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "機電整合工程",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 3,
+     "state": "延續"
+    },
+    {
+     "group": "AI Edge／工業電腦／嵌入式系統",
+     "rank": 4,
+     "state": "延續"
+    },
+    {
+     "group": "半導體測試與量測設備",
+     "rank": 5,
+     "state": "延續"
+    }
+   ]
+  }
+ }
+}

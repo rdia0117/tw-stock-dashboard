@@ -1,5 +1,5 @@
 {
-  "generated": "2026-10-14 21:15",
+  "generated": "2026-10-14 21:52",
   "analysis": [
     "data/analysis_data_20261007.csv",
     "data/analysis_data_20261008.csv",
@@ -7,5 +7,6 @@
     "data/analysis_data_20261013.csv",
     "data/analysis_data_20261014.csv"
   ],
-  "fundamental": "data/fundamental_202609.csv"
+  "fundamental": "data/fundamental_202609.csv",
+  "labels": "rotation_labels.json"
 }
