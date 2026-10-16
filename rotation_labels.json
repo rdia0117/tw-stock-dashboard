@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-16 21:09",
+ "generated": "2026-10-17 02:21",
  "days": {
   "2026-10-12": {
    "流入": [
@@ -293,6 +293,35 @@
      "group": "晶圓代工",
      "rank": 5,
      "state": "低信心／觀察"
+    }
+   ]
+  },
+  "2026-10-16": {
+   "流出": [
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 1,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "機電整合工程",
+     "rank": 3,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 4,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "AI 高階被動元件",
+     "rank": 5,
+     "state": "延續"
     }
    ]
   }
