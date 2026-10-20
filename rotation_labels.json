@@ -1,5 +1,5 @@
 {
- "generated": "2026-10-20 21:18",
+ "generated": "2026-10-21 02:44",
  "days": {
   "2026-10-14": {
    "流入": [
@@ -323,6 +323,89 @@
     },
     {
      "group": "ABF／BT／IC 載板",
+     "rank": 5,
+     "state": "低信心／觀察"
+    }
+   ]
+  },
+  "2026-10-20": {
+   "流入": [
+    {
+     "group": "ODM／EMS",
+     "rank": 1,
+     "state": "高風險"
+    },
+    {
+     "group": "AI Edge／工業電腦／嵌入式系統",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "伺服器機殼／滑軌",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "AI 高階被動元件",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "液冷",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 1,
+     "state": "未確認／觀察"
+    },
+    {
+     "group": "晶圓代工",
+     "rank": 2,
+     "state": "未確認／觀察"
+    },
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 3,
+     "state": "未確認／觀察"
+    },
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 4,
+     "state": "未確認／觀察"
+    },
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 5,
+     "state": "未確認／觀察"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "ODM／EMS",
+     "rank": 1,
+     "state": "中信心／待確認"
+    },
+    {
+     "group": "伺服器機殼／滑軌",
+     "rank": 2,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "液冷",
+     "rank": 3,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "AI Edge／工業電腦／嵌入式系統",
+     "rank": 4,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "AI 高階被動元件",
      "rank": 5,
      "state": "低信心／觀察"
     }
