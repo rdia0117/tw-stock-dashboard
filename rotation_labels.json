@@ -1,62 +1,6 @@
 {
- "generated": "2026-10-20 04:12",
+ "generated": "2026-10-20 21:18",
  "days": {
-  "2026-10-13": {
-   "流入": [
-    {
-     "group": "玻纖布",
-     "rank": 1,
-     "state": "高風險"
-    },
-    {
-     "group": "ODM／EMS",
-     "rank": 2,
-     "state": "高風險"
-    },
-    {
-     "group": "銅箔基板／軟板材料",
-     "rank": 3,
-     "state": "高風險"
-    },
-    {
-     "group": "半導體特殊氣體／高純度先進製程材料",
-     "rank": 4,
-     "state": "高風險"
-    },
-    {
-     "group": "AI Edge／工業電腦／嵌入式系統",
-     "rank": 5,
-     "state": "高風險"
-    }
-   ],
-   "流出": [
-    {
-     "group": "高速線材／Server Cable",
-     "rank": 1,
-     "state": "延續"
-    },
-    {
-     "group": "機電整合工程",
-     "rank": 2,
-     "state": "延續"
-    },
-    {
-     "group": "CoWoS／SoIC／IC測試",
-     "rank": 3,
-     "state": "延續"
-    },
-    {
-     "group": "AI Edge／工業電腦／嵌入式系統",
-     "rank": 4,
-     "state": "延續"
-    },
-    {
-     "group": "半導體測試與量測設備",
-     "rank": 5,
-     "state": "延續"
-    }
-   ]
-  },
   "2026-10-14": {
    "流入": [
     {
