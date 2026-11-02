@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-02 21:12",
+ "generated": "2026-11-03 06:55",
  "days": {
   "2026-10-27": {
    "流入": [
@@ -328,6 +328,89 @@
     },
     {
      "group": "ODM／EMS",
+     "rank": 5,
+     "state": "低信心／觀察"
+    }
+   ]
+  },
+  "2026-11-02": {
+   "流入": [
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 1,
+     "state": "高風險"
+    },
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "液冷",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "矽光子／高速光通訊／主動光元件",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "玻纖布",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "CoWoS／SoIC／IC測試",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "半導體測試介面／探針卡",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "記憶體模組／SSD／品牌通路",
+     "rank": 3,
+     "state": "剛起跌"
+    },
+    {
+     "group": "高速網路／交換器／網通 IC",
+     "rank": 4,
+     "state": "剛起跌"
+    },
+    {
+     "group": "AI 高階被動元件",
+     "rank": 5,
+     "state": "延續"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "液冷",
+     "rank": 1,
+     "state": "中低信心／待確認"
+    },
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 2,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 3,
+     "state": "中低信心／待確認"
+    },
+    {
+     "group": "晶圓代工",
+     "rank": 4,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "DRAM／DDR4／DDR5／利基型 DRAM",
      "rank": 5,
      "state": "低信心／觀察"
     }
