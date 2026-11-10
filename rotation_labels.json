@@ -1,5 +1,5 @@
 {
- "generated": "2026-11-10 21:11",
+ "generated": "2026-11-11 05:00",
  "days": {
   "2026-11-04": {
    "流入": [
@@ -328,6 +328,89 @@
     },
     {
      "group": "先進封裝組裝製程設備",
+     "rank": 5,
+     "state": "低信心／觀察"
+    }
+   ]
+  },
+  "2026-11-10": {
+   "流入": [
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "高速網路／交換器／網通 IC",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 3,
+     "state": "延續"
+    },
+    {
+     "group": "矽晶圓／特殊晶圓",
+     "rank": 4,
+     "state": "延續"
+    },
+    {
+     "group": "企業級SSD／AI Storage／工業儲存",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "記憶體模組／SSD／品牌通路",
+     "rank": 1,
+     "state": "剛起跌"
+    },
+    {
+     "group": "ABF／BT／IC 載板",
+     "rank": 2,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "晶圓代工",
+     "rank": 3,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "ODM／EMS",
+     "rank": 4,
+     "state": "跌勢收斂"
+    },
+    {
+     "group": "液冷",
+     "rank": 5,
+     "state": "跌勢收斂"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "高速線材／Server Cable",
+     "rank": 1,
+     "state": "中信心／待確認"
+    },
+    {
+     "group": "玻纖布",
+     "rank": 2,
+     "state": "中低信心／待確認"
+    },
+    {
+     "group": "ASIC／AI IC 設計",
+     "rank": 3,
+     "state": "中信心／待確認"
+    },
+    {
+     "group": "PSU／BBU／電源管理 IC",
+     "rank": 4,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "矽光子／高速光通訊／主動光元件",
      "rank": 5,
      "state": "低信心／觀察"
     }
