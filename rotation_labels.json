@@ -1,142 +1,59 @@
 {
- "generated": "2026-11-14 04:59",
+ "generated": "2026-11-16 21:25",
  "days": {
-  "2026-11-09": {
+  "2026-11-13": {
    "流入": [
     {
-     "group": "記憶體模組／SSD／品牌通路",
+     "group": "ASIC／AI IC 設計",
      "rank": 1,
-     "state": "高風險"
-    },
-    {
-     "group": "ABF／BT／IC 載板",
-     "rank": 2,
-     "state": "高風險"
-    },
-    {
-     "group": "液冷",
-     "rank": 3,
-     "state": "高風險"
+     "state": "延續"
     },
     {
      "group": "AI 高層數 PCB／伺服器板",
-     "rank": 4,
-     "state": "高風險"
-    },
-    {
-     "group": "伺服器機殼／滑軌",
-     "rank": 5,
-     "state": "高風險"
-    }
-   ],
-   "流出": [
-    {
-     "group": "晶圓代工",
-     "rank": 1,
-     "state": "跌勢收斂"
-    },
-    {
-     "group": "PSU／BBU／電源管理 IC",
      "rank": 2,
-     "state": "跌勢收斂"
+     "state": "高風險"
     },
     {
-     "group": "ASIC／AI IC 設計",
+     "group": "光電二極體／感測元件",
      "rank": 3,
-     "state": "跌勢收斂"
-    },
-    {
-     "group": "玻纖布",
-     "rank": 4,
-     "state": "跌勢收斂"
+     "state": "高風險"
     },
     {
      "group": "矽光子／高速光通訊／主動光元件",
-     "rank": 5,
-     "state": "跌勢收斂"
-    }
-   ],
-   "接棒": [
-    {
-     "group": "記憶體模組／SSD／品牌通路",
-     "rank": 1,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "半導體測試與量測設備",
-     "rank": 2,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "伺服器機殼／滑軌",
-     "rank": 3,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "分離式功率半導體／二極體",
      "rank": 4,
-     "state": "低信心／觀察"
+     "state": "高風險"
     },
     {
-     "group": "先進封裝組裝製程設備",
-     "rank": 5,
-     "state": "低信心／觀察"
-    }
-   ]
-  },
-  "2026-11-10": {
-   "流入": [
-    {
-     "group": "ASIC／AI IC 設計",
-     "rank": 1,
-     "state": "延續"
-    },
-    {
-     "group": "高速網路／交換器／網通 IC",
-     "rank": 2,
-     "state": "延續"
-    },
-    {
-     "group": "高速線材／Server Cable",
-     "rank": 3,
-     "state": "延續"
-    },
-    {
-     "group": "矽晶圓／特殊晶圓",
-     "rank": 4,
-     "state": "延續"
-    },
-    {
-     "group": "企業級SSD／AI Storage／工業儲存",
+     "group": "AI Edge／工業電腦／嵌入式系統",
      "rank": 5,
      "state": "高風險"
     }
    ],
    "流出": [
     {
-     "group": "記憶體模組／SSD／品牌通路",
+     "group": "PCB鑽針／鑽孔加工／刀具耗材",
      "rank": 1,
      "state": "剛起跌"
     },
     {
-     "group": "ABF／BT／IC 載板",
+     "group": "半導體測試與量測設備",
      "rank": 2,
-     "state": "跌勢收斂"
+     "state": "延續"
     },
     {
-     "group": "晶圓代工",
+     "group": "NOR Flash／SLC NAND／ROM",
      "rank": 3,
-     "state": "跌勢收斂"
+     "state": "延續"
     },
     {
-     "group": "ODM／EMS",
+     "group": "DRAM／DDR4／DDR5／利基型 DRAM",
      "rank": 4,
-     "state": "跌勢收斂"
+     "state": "剛起跌"
     },
     {
-     "group": "液冷",
+     "group": "衛星通訊／微波毫米波元件",
      "rank": 5,
-     "state": "跌勢收斂"
+     "state": "剛起跌"
     }
    ],
    "接棒": [
@@ -146,22 +63,105 @@
      "state": "中信心／待確認"
     },
     {
-     "group": "玻纖布",
+     "group": "機電整合工程",
      "rank": 2,
-     "state": "中低信心／待確認"
+     "state": "中信心／待確認"
     },
     {
-     "group": "ASIC／AI IC 設計",
+     "group": "先進封裝組裝製程設備",
      "rank": 3,
      "state": "中信心／待確認"
     },
     {
+     "group": "半導體特殊氣體／高純度先進製程材料",
+     "rank": 4,
+     "state": "中信心／待確認"
+    },
+    {
+     "group": "晶圓代工",
+     "rank": 5,
+     "state": "中信心／待確認"
+    }
+   ]
+  },
+  "2026-11-12": {
+   "流入": [
+    {
+     "group": "半導體測試介面／探針卡",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "AI 高層數 PCB／伺服器板",
+     "rank": 2,
+     "state": "高風險"
+    },
+    {
+     "group": "玻纖布",
+     "rank": 3,
+     "state": "高風險"
+    },
+    {
+     "group": "衛星通訊／微波毫米波元件",
+     "rank": 4,
+     "state": "高風險"
+    },
+    {
+     "group": "PCB鑽針／鑽孔加工／刀具耗材",
+     "rank": 5,
+     "state": "高風險"
+    }
+   ],
+   "流出": [
+    {
+     "group": "液冷",
+     "rank": 1,
+     "state": "延續"
+    },
+    {
+     "group": "ABF／BT／IC 載板",
+     "rank": 2,
+     "state": "延續"
+    },
+    {
+     "group": "AI 高階被動元件",
+     "rank": 3,
+     "state": "延續"
+    },
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 4,
+     "state": "剛起跌"
+    },
+    {
+     "group": "晶圓代工",
+     "rank": 5,
+     "state": "延續"
+    }
+   ],
+   "接棒": [
+    {
+     "group": "銅箔基板／軟板材料",
+     "rank": 1,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "機電整合工程",
+     "rank": 2,
+     "state": "低信心／觀察"
+    },
+    {
      "group": "PSU／BBU／電源管理 IC",
+     "rank": 3,
+     "state": "低信心／觀察"
+    },
+    {
+     "group": "企業級SSD／AI Storage／工業儲存",
      "rank": 4,
      "state": "低信心／觀察"
     },
     {
-     "group": "矽光子／高速光通訊／主動光元件",
+     "group": "AI 高階被動元件",
      "rank": 5,
      "state": "低信心／觀察"
     }
@@ -250,90 +250,7 @@
     }
    ]
   },
-  "2026-11-12": {
-   "流入": [
-    {
-     "group": "半導體測試介面／探針卡",
-     "rank": 1,
-     "state": "延續"
-    },
-    {
-     "group": "AI 高層數 PCB／伺服器板",
-     "rank": 2,
-     "state": "高風險"
-    },
-    {
-     "group": "玻纖布",
-     "rank": 3,
-     "state": "高風險"
-    },
-    {
-     "group": "衛星通訊／微波毫米波元件",
-     "rank": 4,
-     "state": "高風險"
-    },
-    {
-     "group": "PCB鑽針／鑽孔加工／刀具耗材",
-     "rank": 5,
-     "state": "高風險"
-    }
-   ],
-   "流出": [
-    {
-     "group": "液冷",
-     "rank": 1,
-     "state": "延續"
-    },
-    {
-     "group": "ABF／BT／IC 載板",
-     "rank": 2,
-     "state": "延續"
-    },
-    {
-     "group": "AI 高階被動元件",
-     "rank": 3,
-     "state": "延續"
-    },
-    {
-     "group": "銅箔基板／軟板材料",
-     "rank": 4,
-     "state": "剛起跌"
-    },
-    {
-     "group": "晶圓代工",
-     "rank": 5,
-     "state": "延續"
-    }
-   ],
-   "接棒": [
-    {
-     "group": "銅箔基板／軟板材料",
-     "rank": 1,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "機電整合工程",
-     "rank": 2,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "PSU／BBU／電源管理 IC",
-     "rank": 3,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "企業級SSD／AI Storage／工業儲存",
-     "rank": 4,
-     "state": "低信心／觀察"
-    },
-    {
-     "group": "AI 高階被動元件",
-     "rank": 5,
-     "state": "低信心／觀察"
-    }
-   ]
-  },
-  "2026-11-13": {
+  "2026-11-10": {
    "流入": [
     {
      "group": "ASIC／AI IC 設計",
@@ -341,51 +258,51 @@
      "state": "延續"
     },
     {
-     "group": "AI 高層數 PCB／伺服器板",
+     "group": "高速網路／交換器／網通 IC",
      "rank": 2,
-     "state": "高風險"
+     "state": "延續"
     },
     {
-     "group": "光電二極體／感測元件",
+     "group": "高速線材／Server Cable",
      "rank": 3,
-     "state": "高風險"
+     "state": "延續"
     },
     {
-     "group": "矽光子／高速光通訊／主動光元件",
+     "group": "矽晶圓／特殊晶圓",
      "rank": 4,
-     "state": "高風險"
+     "state": "延續"
     },
     {
-     "group": "AI Edge／工業電腦／嵌入式系統",
+     "group": "企業級SSD／AI Storage／工業儲存",
      "rank": 5,
      "state": "高風險"
     }
    ],
    "流出": [
     {
-     "group": "PCB鑽針／鑽孔加工／刀具耗材",
+     "group": "記憶體模組／SSD／品牌通路",
      "rank": 1,
      "state": "剛起跌"
     },
     {
-     "group": "半導體測試與量測設備",
+     "group": "ABF／BT／IC 載板",
      "rank": 2,
-     "state": "延續"
+     "state": "跌勢收斂"
     },
     {
-     "group": "NOR Flash／SLC NAND／ROM",
+     "group": "晶圓代工",
      "rank": 3,
-     "state": "延續"
+     "state": "跌勢收斂"
     },
     {
-     "group": "DRAM／DDR4／DDR5／利基型 DRAM",
+     "group": "ODM／EMS",
      "rank": 4,
-     "state": "剛起跌"
+     "state": "跌勢收斂"
     },
     {
-     "group": "衛星通訊／微波毫米波元件",
+     "group": "液冷",
      "rank": 5,
-     "state": "剛起跌"
+     "state": "跌勢收斂"
     }
    ],
    "接棒": [
@@ -395,24 +312,24 @@
      "state": "中信心／待確認"
     },
     {
-     "group": "機電整合工程",
+     "group": "玻纖布",
      "rank": 2,
-     "state": "中信心／待確認"
+     "state": "中低信心／待確認"
     },
     {
-     "group": "先進封裝組裝製程設備",
+     "group": "ASIC／AI IC 設計",
      "rank": 3,
      "state": "中信心／待確認"
     },
     {
-     "group": "半導體特殊氣體／高純度先進製程材料",
+     "group": "PSU／BBU／電源管理 IC",
      "rank": 4,
-     "state": "中信心／待確認"
+     "state": "低信心／觀察"
     },
     {
-     "group": "晶圓代工",
+     "group": "矽光子／高速光通訊／主動光元件",
      "rank": 5,
-     "state": "中信心／待確認"
+     "state": "低信心／觀察"
     }
    ]
   }

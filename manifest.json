@@ -1,11 +1,11 @@
 {
-  "generated": "2026-11-14 04:59",
+  "generated": "2026-11-16 21:25",
   "analysis": [
-    "data/analysis_data_20261109.csv",
     "data/analysis_data_20261110.csv",
     "data/analysis_data_20261111.csv",
     "data/analysis_data_20261112.csv",
-    "data/analysis_data_20261113.csv"
+    "data/analysis_data_20261113.csv",
+    "data/analysis_data_20261116.csv"
   ],
   "fundamental": "data/fundamental_202610.csv",
   "labels": "rotation_labels.json"
